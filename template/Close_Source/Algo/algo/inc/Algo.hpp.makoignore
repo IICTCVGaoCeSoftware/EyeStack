@@ -1,0 +1,17 @@
+#pragma once
+
+namespace ${cmake_vars["TEMPLATE_PROJECT_NAME"]} {
+
+class ${cmake_vars["TEMPLATE_PROJECT_NAME"]}
+{
+public:
+  virtual ~${cmake_vars["TEMPLATE_PROJECT_NAME"]}() = default;
+
+public:
+  // TODO 添加接口方法
+};
+
+std::unique_ptr<${cmake_vars["TEMPLATE_PROJECT_NAME"]}>
+create();
+
+}

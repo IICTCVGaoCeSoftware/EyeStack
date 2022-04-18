@@ -1,0 +1,7 @@
+// 此文件从 version.hpp.in 自动生成，不要直接修改这个文件！
+
+#define Eyestack_VERSION        "${Eyestack_VERSION}"
+#define Eyestack_VERSION_MAJOR  ${Eyestack_VERSION_MAJOR}
+#define Eyestack_VERSION_MINOR  ${Eyestack_VERSION_MINOR}
+#define Eyestack_VERSION_PATCH  ${Eyestack_VERSION_PATCH}
+#define Eyestack_VERSION_TWEAK  ${Eyestack_VERSION_TWEAK}

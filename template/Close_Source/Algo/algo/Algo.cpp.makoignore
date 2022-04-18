@@ -1,0 +1,14 @@
+#include "${cmake_vars["TEMPLATE_PROJECT_NAME"]}.hpp"
+#include "V1.hpp"
+
+namespace ${cmake_vars["TEMPLATE_PROJECT_NAME"]} {
+
+std::unique_ptr<${cmake_vars["TEMPLATE_PROJECT_NAME"]}>
+create()
+{
+  return std::make_unique<V1>();
+}
+
+// TODO
+
+}

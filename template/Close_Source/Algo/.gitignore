@@ -1,0 +1,11 @@
+# 环境解耦文件
+env.cmake
+
+# vscode 构建目录
+build
+
+# Qt Creator
+**/*.user
+**/*.res
+**/*.autosave
+**/.qt_for_python/

@@ -1,0 +1,33 @@
+# Eyestack ${PROJECT_VERSION} 开发包
+
+使用方式：设置 Eyestack_DIR 为开发包中的 cmake 目录即可通过 find_package 机制建立依赖。
+
+## 目录结构
+
+- bin
+
+  Eyetack 运行时二进制文件
+
+- cmake
+
+  CMake 辅助脚本
+
+- doc
+
+  参考文档
+
+- inc
+
+  包含头文件目录
+
+- lib
+
+  链接库文件目录
+
+- module
+
+  各模块的部署用文件
+
+- template
+
+  预生成的项目模板

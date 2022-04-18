@@ -1,0 +1,12 @@
+# 文件系统解耦
+env.cmake
+
+# Qt
+**/*.user*
+**/*.res
+**/*.autosave
+**/.qt_for_python/
+**/build-**/
+
+# Python
+**/__pycache__/

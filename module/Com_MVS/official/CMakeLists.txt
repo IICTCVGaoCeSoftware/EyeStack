@@ -1,0 +1,43 @@
+# 平台检查
+if(NOT WIN32)
+  message(WARNING "Eyestack::Com_MVS 仅支持 win32 和 win64 平台")
+  return()
+endif()
+
+if(NOT MSVC)
+  message(WARNING "Eyestack::Com_MVS 仅支持 MSVC 生成工具")
+  return()
+endif()
+
+
+
+add_library(Eyestack::Com_MVS_official SHARED IMPORTED GLOBAL)
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(_lib_dir ${CMAKE_CURRENT_LIST_DIR}/Libraries/win32)
+  set(_runtime_dir ${CMAKE_CURRENT_LIST_DIR}/Runtime/Win32_i86)
+
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(_lib_dir ${CMAKE_CURRENT_LIST_DIR}/Libraries/win64)
+  set(_runtime_dir ${CMAKE_CURRENT_LIST_DIR}/Runtime/Win64_x64)
+
+else()
+  message(FATAL_ERROR "意料之外的指针宽度：${CMAKE_SIZEOF_VOID_P}")
+endif()
+
+set_target_properties(Eyestack::Com_MVS_official
+  PROPERTIES
+    IMPORTED_IMPLIB ${_lib_dir}/MvCameraControl.lib
+    IMPORTED_LOCATION ${_runtime_dir}/MvCameraControl.dll
+) # 注意这两个属性名，非常关键
+
+
+file(GLOB _files ${_runtime_dir}/*)
+
+set(EYESTACK_COM_MVS_RUNTIME_FILES ${_files}
+  CACHE STRING "Com_MVS 第三方运行时文件清单。"
+)
+
+function(install_3rdparty_mvs_runtime)
+  install(FILES ${EYESTACK_COM_MVS_RUNTIME_FILES} TYPE BIN)
+endfunction()

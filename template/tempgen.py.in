@@ -1,0 +1,118 @@
+"""模板项目生成工具
+
+命令行参数：
+    <src_dir> <dst_dir>
+
+递归扫描src_dir中的所有文件，然后：
+    1. 如果文件名以“.mako”结尾，则使用Mako引擎处理后，在dst_dir下的对应目录生成处理后的文件；
+    2. 如果目录中存在以“.mako.py”结尾的文件，则在所有处理前按字典序执行脚本中的内容，脚本本身不会被拷贝到目录中。
+    3. 如果文件名以“.makoignore”结尾，则不进行处理，也不进行拷贝。
+    4. 对于其它情况，直接将文件拷贝到目标目录中对应位置。
+"""
+
+import os
+import shutil
+from sys import argv
+
+from mako.template import Template
+
+
+src_dir = argv[1]
+dst_dir = argv[2]
+
+cmake_vars = {
+    "CMAKE_SOURCE_DIR": "@CMAKE_SOURCE_DIR@",
+    "CMAKE_BINARY_DIR": "@CMAKE_BINARY_DIR@",
+    "TEMPLATE_PROJECT_NAME": "@TEMPLATE_PROJECT_NAME@",
+    "OpenCV_DIR": "@OpenCV_DIR@",
+    "BOOST_ROOT": "@BOOST_ROOT@",
+}
+
+arg_vars = {}
+for i in range(3, len(argv)):
+    key, val = argv[i].split("=", 1)
+    arg_vars[key] = val
+
+if os.path.exists(dst_dir):
+    shutil.rmtree(dst_dir, True)
+os.makedirs(dst_dir)
+
+
+def gen_file(relpath: str):
+    src_file = os.path.join(src_dir, relpath)
+    dst_file = os.path.join(dst_dir, relpath)
+
+    try:
+        if not relpath.endswith(".mako"):
+            shutil.copy(src_file, dst_file)
+            return
+
+        temp = Template(filename=src_file)
+        with open(dst_file.rstrip(".mako"), "w", encoding="utf-8") as f:
+            f.write(temp.render(cmake_vars=cmake_vars, arg_vars=arg_vars))
+
+    except BaseException as e:
+        print(f"fail to generate '{src_file}':", e)
+
+
+def gen_dir(relpath: str):
+    all_names = os.listdir(os.path.join(src_dir, relpath))
+
+    # 筛选出脚本和文件
+    names = []
+    scripts = []
+    for name in all_names:
+        if name.endswith(".mako.py"):
+            scripts.append(name)
+            continue
+        elif name.endswith(".makoignore"):
+            continue
+        names.append(name)
+
+    # 执行目录中的脚本
+    def _gen_file(src, dst, **kwargs):
+        temp = Template(filename=os.path.join(src_dir, relpath, src))
+        with open(
+            os.path.join(dst_dir, relpath, dst), "w", encoding="utf-8"
+        ) as f:
+            f.write(
+                temp.render(cmake_vars=cmake_vars, arg_vars=arg_vars, **kwargs)
+            )
+
+    scripts.sort()
+    for script in scripts:
+        try:
+            print(
+                f"executing '{os.path.join(src_dir,relpath, script)}'...",
+                end="",
+            )
+            exec(
+                open(os.path.join(src_dir, relpath, script), "rb").read(),
+                {
+                    "src_dir": os.path.join(src_dir, relpath),
+                    "dst_dir": os.path.join(dst_dir, relpath),
+                    "cmake_vars": cmake_vars,
+                    "arg_vars": arg_vars,
+                    "gen_file": _gen_file,
+                },
+                {},
+            )
+            print("done")
+
+        except BaseException as e:
+            print("fail:", e)
+
+    # 处理目录中的文件
+    for name in names:
+        src_name = os.path.join(src_dir, relpath, name)
+        dst_name = os.path.join(dst_dir, relpath, name)
+
+        if os.path.isfile(src_name):
+            gen_file(os.path.join(relpath, name))
+
+        else:
+            os.mkdir(dst_name)
+            gen_dir(os.path.join(relpath, name))
+
+
+gen_dir("")
