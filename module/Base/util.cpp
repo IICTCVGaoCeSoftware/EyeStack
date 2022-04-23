@@ -1,5 +1,5 @@
-#include "Eyestack/Base.hpp"
 #include "Eyestack/Base/util.hpp"
+#include "Eyestack/Base.hpp"
 
 namespace Eyestack::Base::util {
 
@@ -297,20 +297,77 @@ operator>>(QDataStream& ds, QFile& file)
 }
 
 QDataStream&
+operator<<(QDataStream& ds, const cv::Mat& mat)
+{
+  ds << mat.type() << mat.rows << mat.cols;
+
+  int size = CV_ELEM_SIZE(mat.type()) * mat.rows * mat.cols;
+  int realSize;
+
+  if (mat.isContinuous()) {
+    realSize = ds.writeRawData(mat.ptr<char>(), size);
+
+  } else {
+    int rowsz = CV_ELEM_SIZE(mat.type()) * mat.cols;
+
+    realSize = 0;
+    for (int r = 0; r < mat.rows; ++r)
+      realSize += ds.writeRawData(mat.ptr<char>(r), rowsz);
+  }
+
+  if (size != realSize)
+    throw exc::LoadingError(QObject::tr("cv::Mat 数据长度不符合预期： %1 != %2")
+                              .arg(realSize)
+                              .arg(size));
+
+  return ds;
+}
+
+QDataStream&
+operator>>(QDataStream& ds, cv::Mat& mat)
+{
+  int type, rows, cols;
+  ds >> type >> rows >> cols;
+
+  mat = cv::Mat(rows, cols, type);
+
+  int size = CV_ELEM_SIZE(type) * rows * cols;
+  int realSize = ds.readRawData(mat.ptr<char>(), size);
+
+  if (realSize != size)
+    throw Base::exc::LoadingError(
+      QObject::tr("cv::Mat 数据长度不符合预期： %1 != %2")
+        .arg(realSize)
+        .arg(size));
+
+  return ds;
+}
+
+QDataStream&
 operator<<(QDataStream& ds, cv::InputArray arr)
 {
   cv::Mat mat = arr.getMat();
 
   ds << mat.type() << mat.rows << mat.cols;
 
+  int size = CV_ELEM_SIZE(mat.type()) * mat.rows * mat.cols;
+  int realSize;
+
   if (mat.isContinuous()) {
-    ds.writeRawData(mat.ptr<char>(), (mat.dataend - mat.datastart));
+    realSize = ds.writeRawData(mat.ptr<char>(), size);
 
   } else {
     int rowsz = CV_ELEM_SIZE(mat.type()) * mat.cols;
+
+    realSize = 0;
     for (int r = 0; r < mat.rows; ++r)
-      ds.writeRawData(mat.ptr<char>(r), rowsz);
+      realSize += ds.writeRawData(mat.ptr<char>(r), rowsz);
   }
+
+  if (size != realSize)
+    throw exc::LoadingError(QObject::tr("cv::Mat 数据长度不符合预期： %1 != %2")
+                              .arg(realSize)
+                              .arg(size));
 
   return ds;
 }
@@ -329,7 +386,7 @@ operator>>(QDataStream& ds, cv::OutputArray arr)
 
   if (realSize != size)
     throw Base::exc::LoadingError(
-      QObject::tr("cv::Mat 数据长度不符合预期： %1 < %2")
+      QObject::tr("cv::Mat 数据长度不符合预期： %1 != %2")
         .arg(realSize)
         .arg(size));
 

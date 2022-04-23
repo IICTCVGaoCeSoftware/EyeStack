@@ -64,7 +64,7 @@ public:
    */
   cv::Mat snap() noexcept(false)
   {
-    auto mat = _camera.snap_cvmat(_timeout, _colored);
+    auto mat = _camera->snap_cvmat(_timeout, _colored);
     if (_monitored)
       emit s_refresh(mat);
     return mat;
@@ -74,7 +74,7 @@ public:
   /**
    * @brief 当前使用的相机
    */
-  MvsCameraWrapper camera() { return _camera; }
+  MvsCameraWrapper::Shared camera() { return _camera; }
 
   /**
    * @brief 取帧超时时间
@@ -101,7 +101,7 @@ signals:
    */
   void s_refresh(::cv::Mat frame, QPrivateSignal = QPrivateSignal());
 
-  void u_camera(::Eyestack::Com_MVS::MvsCameraWrapper camera);
+  void u_camera(::Eyestack::Com_MVS::MvsCameraWrapper::Shared camera);
 
   void u_timeout(int msec);
 
@@ -110,8 +110,8 @@ signals:
   void u_monitored(bool flag);
 
 public slots:
-  void set_camera(MvsCameraWrapper camera) { _camera = camera; }
-  void setCamera(MvsCameraWrapper camera)
+  void set_camera(MvsCameraWrapper::Shared camera) { _camera = camera; }
+  void setCamera(MvsCameraWrapper::Shared camera)
   {
     set_camera(camera);
     emit u_camera(camera);
@@ -139,7 +139,7 @@ public slots:
   }
 
 private:
-  MvsCameraWrapper _camera;
+  MvsCameraWrapper::Shared _camera;
   int _timeout{ 100 };
   bool _colored{ false };
   bool _monitored{ false };

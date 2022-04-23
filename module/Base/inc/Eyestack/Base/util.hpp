@@ -236,10 +236,16 @@ QDataStream&
 operator>>(QDataStream& ds, QFile& file);
 
 QDataStream&
+operator<<(QDataStream& ds, const cv::Mat& mat);
+
+QDataStream&
+operator>>(QDataStream& ds, cv::Mat& mat);
+
+QDataStream&
 operator<<(QDataStream& ds, cv::InputArray arr);
 
 QDataStream&
-operator>>(QDataStream& ds, cv::OutputArray& arr);
+operator>>(QDataStream& ds, cv::OutputArray arr);
 
 inline QDataStream&
 operator<<(QDataStream& ds, const cv::Size& size)

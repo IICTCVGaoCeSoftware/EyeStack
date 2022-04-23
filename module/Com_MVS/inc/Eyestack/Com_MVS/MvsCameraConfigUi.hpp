@@ -4,7 +4,7 @@
 #include "Eyestack/Design/Monitor.hpp"
 #include "ginit.hpp"
 
-Q_DECLARE_METATYPE(::Eyestack::Com_MVS::MvsCameraWrapper);
+Q_DECLARE_METATYPE(::Eyestack::Com_MVS::MvsCameraWrapper::Shared);
 
 namespace Eyestack::Com_MVS {
 
@@ -38,7 +38,7 @@ public:
   /**
    * @brief 获取当前选择的相机
    */
-  MvsCameraWrapper chosen() { return _chosen; }
+  MvsCameraWrapper::Shared chosen() { return _chosen; }
 
   bool colored();
 
@@ -47,7 +47,7 @@ public:
   bool monitored();
 
 signals:
-  void u_chosen(::Eyestack::Com_MVS::MvsCameraWrapper select);
+  void u_chosen(::Eyestack::Com_MVS::MvsCameraWrapper::Shared select);
 
   void u_colored(bool colored);
 
@@ -59,7 +59,7 @@ public slots:
   /**
    * @brief 设置当前选择的相机，不发射更新信号。
    */
-  void set_chosen(MvsCameraWrapper select)
+  void set_chosen(MvsCameraWrapper::Shared select)
   {
     _chosen = select;
     update_chosen();
@@ -75,7 +75,7 @@ public slots:
   /**
    * @brief 设置当前选择的相机，发射更新信号。
    */
-  void setChosen(MvsCameraWrapper select)
+  void setChosen(MvsCameraWrapper::Shared select)
   {
     set_chosen(select);
     emit u_chosen(select);
@@ -102,7 +102,7 @@ public slots:
 private:
   struct Wrapper
   {
-    MvsCameraWrapper _camera;
+    MvsCameraWrapper::Shared _camera;
     bool _grabbing{ false };
   };
 
@@ -131,7 +131,7 @@ private:
                          int role) override;
   } _model{ *this };
 
-  MvsCameraWrapper _chosen;
+  MvsCameraWrapper::Shared _chosen;
   QModelIndex _selected;
   QTimer _timer;
 
@@ -169,4 +169,5 @@ private slots:
   void on_impropButton_clicked();
   void on_expropButton_clicked();
 };
+
 }

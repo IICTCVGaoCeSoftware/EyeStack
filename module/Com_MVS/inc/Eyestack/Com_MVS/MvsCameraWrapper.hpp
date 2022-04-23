@@ -11,11 +11,20 @@ namespace Eyestack::Com_MVS {
 
 /**
  * @threadsafe
- * @brief MVS 相机包装类，采用隐式共享模式。
+ * @brief MVS 相机包装类，不可移动，不可复制。
  */
-class EYESTACK_COM_MVS_EXPORT MvsCameraWrapper
+class EYESTACK_COM_MVS_EXPORT MvsCameraWrapper final
 {
   using _T = MvsCameraWrapper;
+
+  MvsCameraWrapper(const MvsCameraWrapper& other) = delete;
+  MvsCameraWrapper(MvsCameraWrapper&& other) = delete;
+
+public:
+  /**
+   * @brief 共享指针类别名
+   */
+  using Shared = QSharedPointer<MvsCameraWrapper>;
 
 public:
   /**
@@ -23,49 +32,30 @@ public:
    * @brief 调用 MVS SDK，列出所有相机
    * @return 基于共享指针模式创建的 MvsCameraWrapper 对象们
    */
-  static QVector<MvsCameraWrapper> list_all();
+  static QVector<Shared> list_all() noexcept(false);
 
 public:
-  MvsCameraWrapper()
-    : _data(new Data())
-  {}
-
-  MvsCameraWrapper(const MvsCameraWrapper& other)
-    : _data(other._data)
-  {}
-
-public:
-  /**
-   * @brief 判断包装器共享指针是否有效
-   */
-  operator bool() { return _data->_handle; }
-
-  /**
-   * @brief 判断两个对象管理的是不是同一个相机控制块。
-   */
-  bool operator==(const MvsCameraWrapper& other)
-  {
-    return _data == other._data;
-  }
+  MvsCameraWrapper() = default;
+  ~MvsCameraWrapper() noexcept;
 
 public:
   /**
    * @threadsafe
    * @brief 获取相机的 MAC 地址
    */
-  uint64_t mac_addr() const;
+  uint64_t mac_addr() const noexcept;
 
   /**
    * @threadsafe
    * @brief 获取相机名
    */
-  QString name() const;
+  QString name() const noexcept;
 
   /**
    * @threadsafe
    * @brief 获取一个比较详细的描述相机信息的字符串
    */
-  QString info() const;
+  QString info() const noexcept;
 
   /**
    * @threadsafe
@@ -98,6 +88,12 @@ public:
    * @brief 检查相机是否是开启的
    */
   bool is_connected() noexcept(false);
+
+  //  /**
+  //   * @threadsafe
+  //   * @brief 检查相机是否已开始取流，如果相机没有打开，返回 false
+  //   */
+  //  bool is_grabbing() noexcept(false);
 
   /**
    * @threadsafe
@@ -136,23 +132,16 @@ public:
   void load_feature(const QString& path) noexcept(false);
 
 private:
-  struct Data
-  {
-    char* _handle{ nullptr };
-    MV_CC_DEVICE_INFO _info;
-    QVector<unsigned char> _payload;
-    QMutex _mutex;
+  void* _handle{ nullptr };
+  QMutex _mutex;
+  MV_CC_DEVICE_INFO _info{ 0 };
+  QVector<unsigned char> _payload;
+  //  bool _grabbing{ false };
 
 #ifdef EYESTACK_COM_MVS_TEST
-    int _frameCounter{ 0 };
+  bool _grabbing{ false };
+  int _frameCounter{ 0 };
 #endif
-
-    Data() { memset(&_info, 0, sizeof(_info)); }
-    ~Data();
-  };
-
-private:
-  QSharedPointer<Data> _data;
 };
 
 /**

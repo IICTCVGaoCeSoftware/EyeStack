@@ -17,7 +17,7 @@ ginit()
 
   qRegisterMetaType<::cv::Mat>("::cv::Mat");
   qRegisterMetaType<MvsError>();
-  qRegisterMetaType<MvsCameraWrapper>();
+  qRegisterMetaType<MvsCameraWrapper::Shared>();
 }
 
 #ifdef _DEBUG

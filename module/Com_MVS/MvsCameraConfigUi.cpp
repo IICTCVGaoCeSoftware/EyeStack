@@ -90,7 +90,7 @@ MvsCameraConfigUi::update_chosen()
 {
   emit _model.dataChanged(QModelIndex(), QModelIndex());
   if (_chosen) {
-    _ui->runningMonitor->set_caption(_chosen.name());
+    _ui->runningMonitor->set_caption(_chosen->name());
     _ui->runningMonitor->setEnabled(true);
 
   } else {
@@ -108,7 +108,7 @@ MvsCameraConfigUi::update_selected()
     _ui->configTab->setEnabled(true);
 
     auto& w = _wrappers[_selected.row()];
-    _ui->configMonitor->set_caption(w._camera.name());
+    _ui->configMonitor->set_caption(w._camera->name());
     //    _ui->configMonitor->setEnabled(true);
 
     if (w._grabbing)
@@ -134,9 +134,9 @@ MvsCameraConfigUi::on_refreshButton_clicked()
   auto camlist = MvsCameraWrapper::list_all();
   for (int i = _wrappers.size(); --i != -1;) {
     auto& cam = _wrappers[i]._camera;
-    for (int j = camlist.size(); --j != 0;) {
+    for (int j = camlist.size(); --j != -1;) {
       auto& newCam = camlist[j];
-      if (cam.mac_addr() == newCam.mac_addr()) {
+      if (cam->mac_addr() == newCam->mac_addr()) {
         // HACK 不同相机的 mac_addr 可能相同？
         camlist.remove(j);
         goto SKIP_REMOVE;
@@ -184,17 +184,17 @@ MvsCameraConfigUi::on_camlist_doubleClicked(const QModelIndex& index)
 
   auto& cam = _wrappers[row]._camera;
   try {
-    if (cam.is_connected())
+    if (cam->is_connected())
       try {
-        cam.stop_grabbing();
-        cam.close();
+        cam->stop_grabbing();
+        cam->close();
       } catch (const MvsError& e) {
         QMessageBox::critical(this, tr("关闭相机失败"), e.repr());
       }
     else
       try {
-        cam.open();
-        cam.start_grabbing();
+        cam->open();
+        cam->start_grabbing();
       } catch (const MvsError& e) {
         QMessageBox::critical(this, tr("打开相机失败"), e.repr());
       }
@@ -228,7 +228,7 @@ MvsCameraConfigUi::when_timer_timeout()
 {
   try {
     auto& w = _wrappers[_selected.row()];
-    auto image = w._camera.snap_qimage(100, true);
+    auto image = w._camera->snap_qimage(100, true);
     _ui->configMonitor->display(image);
 
   } catch (const MvsError& e) {
@@ -264,7 +264,7 @@ MvsCameraConfigUi::on_impropButton_clicked()
     return;
 
   try {
-    cam.load_feature(fileName);
+    cam->load_feature(fileName);
     QMessageBox::information(
       this, tr("导入属性树成功"), tr("成功导入文件\"%1\"").arg(fileName));
   } catch (const MvsError& e) {
@@ -288,7 +288,7 @@ MvsCameraConfigUi::on_expropButton_clicked()
     return;
 
   try {
-    cam.save_feature(fileName);
+    cam->save_feature(fileName);
     QMessageBox::information(
       this, tr("导出属性树成功"), tr("成功导出文件\"%1\"").arg(fileName));
   } catch (const MvsError& e) {
@@ -322,7 +322,7 @@ MvsCameraConfigUi::Model::data(const QModelIndex& index, int role) const
   auto& cam = _self._wrappers[index.row()]._camera;
   switch (role) {
     case Qt::DisplayRole: {
-      return cam.name();
+      return cam->name();
     } break;
 
     case Qt::FontRole: {
@@ -333,12 +333,12 @@ MvsCameraConfigUi::Model::data(const QModelIndex& index, int role) const
     } break;
 
     case Qt::ToolTipRole: {
-      return cam.info();
+      return cam->info();
     } break;
 
     case Qt::CheckStateRole: {
       try {
-        if (cam.is_connected())
+        if (cam->is_connected())
           return Qt::CheckState::Checked;
         else
           return Qt::CheckState::Unchecked;
@@ -361,17 +361,17 @@ MvsCameraConfigUi::Model::setData(const QModelIndex& index,
     case Qt::CheckStateRole: {
       auto& cam = _self._wrappers[index.row()]._camera;
       try {
-        if (cam.is_connected())
+        if (cam->is_connected())
           try {
-            cam.stop_grabbing();
-            cam.close();
+            cam->stop_grabbing();
+            cam->close();
           } catch (const MvsError& e) {
             QMessageBox::critical(&_self, tr("关闭相机失败"), e.repr());
           }
         else
           try {
-            cam.open();
-            cam.start_grabbing();
+            cam->open();
+            cam->start_grabbing();
           } catch (const MvsError& e) {
             QMessageBox::critical(&_self, tr("打开相机失败"), e.repr());
           }

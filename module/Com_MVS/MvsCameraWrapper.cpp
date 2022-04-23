@@ -19,8 +19,8 @@ ensure(int code)
     throw MvsError(code);
 }
 
-QVector<MvsCameraWrapper>
-MvsCameraWrapper::list_all()
+QVector<MvsCameraWrapper::Shared>
+MvsCameraWrapper::list_all() noexcept(false)
 {
   static QMutex mutex;
   QMutexLocker locker(&mutex);
@@ -30,32 +30,44 @@ MvsCameraWrapper::list_all()
                              MV_CAMERALINK_DEVICE,
                            &deviceList));
 
-  QVector<MvsCameraWrapper> ret(deviceList.nDeviceNum);
+  QVector<Shared> ret;
+  ret.reserve(deviceList.nDeviceNum);
   for (unsigned int i = 0; i < deviceList.nDeviceNum; ++i) {
     void* handle;
-    MV_CC_CreateHandle(&handle, deviceList.pDeviceInfo[i]);
+    if (MV_OK != MV_CC_CreateHandle(&handle, deviceList.pDeviceInfo[i]))
+      continue;
 
-    ret[i]._data->_handle = reinterpret_cast<char*>(handle);
-    MV_CC_GetDeviceInfo(handle, &ret[i]._data->_info);
+    auto cam = Shared::create();
+    cam->_handle = handle;
+    if (MV_OK != MV_CC_GetDeviceInfo(handle, &cam->_info))
+      continue;
+
+    ret.push_back(cam);
   }
 
   return ret;
+}
+
+MvsCameraWrapper::~MvsCameraWrapper() noexcept
+{
+  if (_handle)
+    Q_ASSERT(MV_CC_DestroyHandle(_handle) == MV_OK);
 }
 
 #else
 
 static QRandomGenerator sRg;
 
-QVector<MvsCameraWrapper>
+QVector<MvsCameraWrapper::Shared>
 MvsCameraWrapper::list_all()
 {
-  QVector<MvsCameraWrapper> _wrappers;
+  QVector<MvsCameraWrapper::Shared> _wrappers;
 
   auto len = sRg.bounded(0, 15);
   _wrappers.resize(len);
 
   for (int i = 0; i < len; ++i) {
-    auto& d = _wrappers[i]._data;
+    auto& d = _wrappers[i] = Shared::create();
     d->_info.nMacAddrLow = i;
     switch (sRg.bounded(0, 3)) {
       case 0:
@@ -75,14 +87,15 @@ MvsCameraWrapper::list_all()
   return _wrappers;
 }
 
+MvsCameraWrapper::~MvsCameraWrapper() noexcept {}
+
 #endif
 
 uint64_t
-MvsCameraWrapper::mac_addr() const
+MvsCameraWrapper::mac_addr() const noexcept
 {
-  auto& deviceInfo = _data->_info;
-  uint64_t macAddr = deviceInfo.nMacAddrHigh;
-  macAddr = macAddr << 32 | deviceInfo.nMacAddrLow;
+  uint64_t macAddr = _info.nMacAddrHigh;
+  macAddr = macAddr << 32 | _info.nMacAddrLow;
   return macAddr;
 }
 
@@ -93,14 +106,12 @@ operator<<(QTextStream& out, unsigned char* p)
 }
 
 QString
-MvsCameraWrapper::name() const
+MvsCameraWrapper::name() const noexcept
 {
   QString ret;
   QTextStream sout(&ret);
 
-  auto info = _data->_info;
-
-  switch (info.nTLayerType) {
+  switch (_info.nTLayerType) {
     case MV_GIGE_DEVICE: {
       sout << "[GIGE] ";
     } break;
@@ -125,28 +136,25 @@ MvsCameraWrapper::name() const
   sout << Qt::hex;
   sout.setPadChar('0');
   sout.setFieldWidth(8);
-  sout << info.nMacAddrHigh;
+  sout << _info.nMacAddrHigh;
   sout.setFieldWidth(0);
   sout << '-';
   sout.setFieldWidth(8);
-  sout << info.nMacAddrLow;
+  sout << _info.nMacAddrLow;
   return ret;
 }
 
 QString
-MvsCameraWrapper::info() const
+MvsCameraWrapper::info() const noexcept
 {
-  if (!_data)
-    throw MvsError(MV_E_HANDLE);
-
-  auto info = _data->_info;
+  auto info = &_info;
 
   QString ret;
   QTextStream sout(&ret);
 
-  switch (info.nTLayerType) {
+  switch (_info.nTLayerType) {
     case MV_GIGE_DEVICE: {
-      auto& gige = info.SpecialInfo.stGigEInfo;
+      auto& gige = _info.SpecialInfo.stGigEInfo;
 
       sout << "<MV_GIGE_DEVICE>";
       sout << "\nchDeviceVersion: " << gige.chDeviceVersion;
@@ -165,12 +173,12 @@ MvsCameraWrapper::info() const
 
     case MV_1394_DEVICE: {
       sout << "<MV_1394_DEVICE>";
-      sout << "nMajorVer: " << info.nMajorVer;
-      sout << "nMinorVer: " << info.nMinorVer;
+      sout << "nMajorVer: " << _info.nMajorVer;
+      sout << "nMinorVer: " << _info.nMinorVer;
     } break;
 
     case MV_USB_DEVICE: {
-      auto& usb3 = info.SpecialInfo.stUsb3VInfo;
+      auto& usb3 = _info.SpecialInfo.stUsb3VInfo;
 
       sout << "<MV_USB_DEVICE>";
       sout << "\nchDeviceGUID: " << usb3.chDeviceGUID;
@@ -184,7 +192,7 @@ MvsCameraWrapper::info() const
     } break;
 
     case MV_CAMERALINK_DEVICE: {
-      auto& caml = info.SpecialInfo.stCamLInfo;
+      auto& caml = _info.SpecialInfo.stCamLInfo;
 
       sout << "<MV_CAMERALINK_DEVICE>";
       sout << "\nchDeviceVersion: " << caml.chDeviceVersion;
@@ -208,83 +216,107 @@ MvsCameraWrapper::info() const
 void
 MvsCameraWrapper::open() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
-  auto handle = _data->_handle;
-  ensure(MV_CC_OpenDevice(handle));
+  ensure(MV_CC_OpenDevice(_handle));
 
-  if (_data->_info.nTLayerType == MV_GIGE_DEVICE) {
-    int nPacketSize = MV_CC_GetOptimalPacketSize(handle);
-    ensure(MV_CC_SetIntValue(handle, "GevSCPSPacketSize", nPacketSize));
+  if (_info.nTLayerType == MV_GIGE_DEVICE) {
+    int nPacketSize = MV_CC_GetOptimalPacketSize(_handle);
+    ensure(MV_CC_SetIntValue(_handle, "GevSCPSPacketSize", nPacketSize));
   }
 
   // 获取数据包大小
   MVCC_INTVALUE param;
-  ensure(MV_CC_GetIntValue(_data->_handle, "PayloadSize", &param));
-  _data->_payload.resize(param.nCurValue);
+  ensure(MV_CC_GetIntValue(_handle, "PayloadSize", &param));
+  _payload.resize(param.nCurValue);
 }
 
 void
 MvsCameraWrapper::start_grabbing(unsigned int nodeNum) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
   // 设置触发模式为off
   //  ensure(MV_CC_SetEnumValue(_handle, "TriggerMode", 0));
 
-  // 在此处启动取流，避免每次snap时的开销
-  ensure(MV_CC_SetImageNodeNum(_data->_handle, nodeNum));
-  ensure(MV_CC_StartGrabbing(_data->_handle));
+  ensure(MV_CC_SetImageNodeNum(_handle, nodeNum));
+  ensure(MV_CC_StartGrabbing(_handle));
+
+  //  _grabbing = true;
 }
 
 void
 MvsCameraWrapper::stop_grabbing() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
-  ensure(MV_CC_StopGrabbing(_data->_handle));
+  ensure(MV_CC_StopGrabbing(_handle));
+
+  //  _grabbing = false;
 }
 
 void
 MvsCameraWrapper::close() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
-  ensure(MV_CC_CloseDevice(_data->_handle));
+  ensure(MV_CC_CloseDevice(_handle));
+
+  //  _grabbing = false; // 重置状态标记
 }
 
 bool
 MvsCameraWrapper::is_connected() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
-  return MV_CC_IsDeviceConnected(_data->_handle);
+  return MV_CC_IsDeviceConnected(_handle);
 }
+
+// bool
+// MvsCameraWrapper::is_grabbing() noexcept(false)
+//{
+//   if (!_handle)
+//     throw MvsError(MV_E_HANDLE);
+//   QMutexLocker locker(&_mutex);
+//   if (!MV_CC_IsDeviceConnected(_handle))
+//     return false;
+//   return _grabbing;
+// }
 
 cv::Mat
 MvsCameraWrapper::snap_cvmat(uint timeout, bool colored) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
   MV_FRAME_OUT_INFO_EX frameInfo;
-  ensure(MV_CC_GetOneFrameTimeout(_data->_handle,
-                                  _data->_payload.data(),
-                                  unsigned(_data->_payload.size()),
-                                  &frameInfo,
-                                  timeout));
+  ensure(MV_CC_GetOneFrameTimeout(
+    _handle, _payload.data(), unsigned(_payload.size()), &frameInfo, timeout));
   cv::Mat img(frameInfo.nHeight, frameInfo.nWidth, colored ? CV_8UC3 : CV_8UC1);
 
   MV_CC_PIXEL_CONVERT_PARAM param;
   param.nWidth = frameInfo.nWidth;
   param.nHeight = frameInfo.nHeight;
-  param.pSrcData = _data->_payload.data();
+  param.pSrcData = _payload.data();
   param.nSrcDataLen = frameInfo.nFrameLen;
   param.enSrcPixelType = frameInfo.enPixelType;
   param.pDstBuffer = img.data;
   param.nDstBufferSize = (unsigned int)(img.total() * img.elemSize());
   param.enDstPixelType =
     colored ? PixelType_Gvsp_BGR8_Packed : PixelType_Gvsp_Mono8;
-  ensure(MV_CC_ConvertPixelType(_data->_handle, &param));
+  ensure(MV_CC_ConvertPixelType(_handle, &param));
 
   return img;
 }
@@ -292,14 +324,13 @@ MvsCameraWrapper::snap_cvmat(uint timeout, bool colored) noexcept(false)
 QImage
 MvsCameraWrapper::snap_qimage(uint timeout, bool colored) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
   MV_FRAME_OUT_INFO_EX frameInfo;
-  ensure(MV_CC_GetOneFrameTimeout(_data->_handle,
-                                  _data->_payload.data(),
-                                  unsigned(_data->_payload.size()),
-                                  &frameInfo,
-                                  timeout));
+  ensure(MV_CC_GetOneFrameTimeout(
+    _handle, _payload.data(), unsigned(_payload.size()), &frameInfo, timeout));
   QImage img(frameInfo.nWidth,
              frameInfo.nHeight,
              colored ? QImage::Format_RGB888 : QImage::Format_Grayscale8);
@@ -307,14 +338,14 @@ MvsCameraWrapper::snap_qimage(uint timeout, bool colored) noexcept(false)
   MV_CC_PIXEL_CONVERT_PARAM param;
   param.nWidth = frameInfo.nWidth;
   param.nHeight = frameInfo.nHeight;
-  param.pSrcData = _data->_payload.data();
+  param.pSrcData = _payload.data();
   param.nSrcDataLen = frameInfo.nFrameLen;
   param.enSrcPixelType = frameInfo.enPixelType;
   param.pDstBuffer = img.bits();
   param.nDstBufferSize = img.sizeInBytes();
   param.enDstPixelType =
     colored ? PixelType_Gvsp_RGB8_Packed : PixelType_Gvsp_Mono8;
-  ensure(MV_CC_ConvertPixelType(_data->_handle, &param));
+  ensure(MV_CC_ConvertPixelType(_handle, &param));
 
   return img;
 }
@@ -322,25 +353,23 @@ MvsCameraWrapper::snap_qimage(uint timeout, bool colored) noexcept(false)
 void
 MvsCameraWrapper::save_feature(const QString& path) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
   auto tmp = path.toStdString();
-  ensure(MV_CC_FeatureSave(_data->_handle, tmp.c_str()));
+  ensure(MV_CC_FeatureSave(_handle, tmp.c_str()));
 }
 
 void
 MvsCameraWrapper::load_feature(const QString& path) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  if (!_handle)
+    throw MvsError(MV_E_HANDLE);
+  QMutexLocker locker(&_mutex);
 
   auto tmp = path.toStdString();
-  ensure(MV_CC_FeatureLoad(_data->_handle, tmp.c_str()));
-}
-
-MvsCameraWrapper::Data::~Data()
-{
-  if (_handle)
-    Q_ASSERT(MV_CC_DestroyHandle(_handle) == MV_OK);
+  ensure(MV_CC_FeatureLoad(_handle, tmp.c_str()));
 }
 
 #else
@@ -348,12 +377,12 @@ MvsCameraWrapper::Data::~Data()
 void
 MvsCameraWrapper::open() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  QMutexLocker locker(&_mutex);
 
   if (sRg.generateDouble() < 0.01) {
     throw MvsError(MV_E_HANDLE);
   }
-  _data->_handle = reinterpret_cast<char*>(1);
+  _handle = reinterpret_cast<void*>(1);
 }
 
 void
@@ -362,6 +391,7 @@ MvsCameraWrapper::start_grabbing(unsigned int nodeNum) noexcept(false)
   if (sRg.generateDouble() < 0.01) {
     throw MvsError(MV_E_HANDLE);
   }
+  _grabbing = true;
 }
 
 void
@@ -370,36 +400,37 @@ MvsCameraWrapper::stop_grabbing() noexcept(false)
   if (sRg.generateDouble() < 0.01) {
     throw MvsError(MV_E_HANDLE);
   }
+  _grabbing = false;
 }
 
 void
 MvsCameraWrapper::close() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  QMutexLocker locker(&_mutex);
 
   if (sRg.generateDouble() < 0.01) {
     throw MvsError(MV_E_HANDLE);
   }
-  _data->_handle = nullptr;
+  _handle = nullptr;
 }
 
 bool
 MvsCameraWrapper::is_connected() noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  QMutexLocker locker(&_mutex);
 
   if (sRg.generateDouble() < 0.01) {
     throw MvsError(MV_E_HANDLE);
   }
-  return _data->_handle;
+  return _handle;
 }
 
 cv::Mat
 MvsCameraWrapper::snap_cvmat(uint timeout, bool colored) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  QMutexLocker locker(&_mutex);
 
-  if (!_data->_handle)
+  if (!_handle || !_grabbing)
     throw MvsError(MV_E_CALLORDER);
 
   if (sRg.generateDouble() < 0.01) {
@@ -421,9 +452,9 @@ MvsCameraWrapper::snap_cvmat(uint timeout, bool colored) noexcept(false)
 QImage
 MvsCameraWrapper::snap_qimage(uint timeout, bool colored) noexcept(false)
 {
-  QMutexLocker locker(&_data->_mutex);
+  QMutexLocker locker(&_mutex);
 
-  if (!_data->_handle)
+  if (!_handle || !_grabbing)
     throw MvsError(MV_E_CALLORDER);
 
   QImage image({ 800, 800 },
@@ -434,7 +465,7 @@ MvsCameraWrapper::snap_qimage(uint timeout, bool colored) noexcept(false)
   painter.setFont(font);
   painter.drawText(300, 300, "QImage 测试图片");
   painter.drawText(50, 400, name());
-  painter.drawText(100, 500, QString::number(++_data->_frameCounter));
+  painter.drawText(100, 500, QString::number(++_frameCounter));
   return image;
 }
 
@@ -445,8 +476,6 @@ MvsCameraWrapper::save_feature(const QString& path) noexcept(false)
 void
 MvsCameraWrapper::load_feature(const QString& path) noexcept(false)
 {}
-
-MvsCameraWrapper::Data::~Data() {}
 
 #endif
 
