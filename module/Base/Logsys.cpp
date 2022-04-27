@@ -141,6 +141,7 @@ Logsys::Logsys(Manifest& manifest) noexcept(false)
 
   // 启动存储检查定时器
   startTimer(manifest.checkInterval);
+  setAutoDelete(false);
 }
 
 Logsys::~Logsys() noexcept
