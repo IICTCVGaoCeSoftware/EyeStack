@@ -135,6 +135,16 @@ private:
   QModelIndex _selected;
   QTimer _timer;
 
+  BOOL m_bOpenDevice;    // ch:是否打开设备 | en:Whether to open device
+  BOOL m_bStartGrabbing; // ch:是否开始抓图 | en:Whether to start grabbing
+  int m_nTriggerMode;    // ch:触发模式 | en:Trigger Mode
+  int m_nTriggerSource;  // ch:触发源 | en:Trigger Source
+  CRITICAL_SECTION m_hSaveImageMux;
+  unsigned char* m_pSaveImageBuf;
+  unsigned int m_nSaveImageBufSize;
+  MV_FRAME_OUT_INFO_EX m_stImageInfo;
+  double m_dExposureEdit;
+
 private:
   // 计算并更新所有与 _chosen 有关的界面组件状态
   void update_chosen();
