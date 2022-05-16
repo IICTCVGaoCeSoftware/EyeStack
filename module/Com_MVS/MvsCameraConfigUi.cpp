@@ -129,6 +129,137 @@ MvsCameraConfigUi::update_selected()
 }
 
 void
+MvsCameraConfigUi::SetTriggerMode()
+{
+  _chosen->SetEnumValue("TriggerMode", m_nTriggerMode);
+}
+
+void
+MvsCameraConfigUi::GetTriggerMode()
+{
+  MVCC_ENUMVALUE stEnumValue = { 0 };
+
+  _chosen->GetEnumValue("TriggerMode", &stEnumValue);
+  m_nTriggerMode = stEnumValue.nCurValue;
+  if (MV_TRIGGER_MODE_ON == m_nTriggerMode) {
+    on_TriggerButton_clicked();
+  } else {
+    m_nTriggerMode = MV_TRIGGER_MODE_OFF;
+    on_ContinueButton_clicked();
+  }
+}
+
+void
+MvsCameraConfigUi::GetExposureTime()
+{
+  MVCC_FLOATVALUE stFloatValue = { 0 };
+  _chosen->GetFloatValue("ExposureTime", &stFloatValue);
+  m_dExposureEdit = stFloatValue.fCurValue;
+}
+
+void
+MvsCameraConfigUi::SetExposureTime()
+{
+  // ch:调节这两个曝光模式，才能让曝光时间生效
+  _chosen->SetEnumValue("ExposureMode", MV_EXPOSURE_MODE_TIMED);
+  _chosen->SetEnumValue("ExposureAuto", MV_EXPOSURE_AUTO_MODE_OFF);
+  _chosen->SetFloatValue("ExposureTime", (float)m_dExposureEdit);
+}
+
+void
+MvsCameraConfigUi::GetTriggerSource()
+{
+  MVCC_ENUMVALUE stEnumValue = { 0 };
+  _chosen->GetEnumValue("TriggerSource", &stEnumValue);
+  if ((unsigned int)MV_TRIGGER_SOURCE_SOFTWARE == stEnumValue.nCurValue) {
+    m_bSoftWareTriggerCheck = TRUE;
+  } else {
+    m_bSoftWareTriggerCheck = FALSE;
+  }
+}
+
+void
+MvsCameraConfigUi::SetTriggerSource()
+{
+  if (m_bSoftWareTriggerCheck) {
+    m_nTriggerSource = MV_TRIGGER_SOURCE_SOFTWARE;
+    _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
+    // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(TRUE);
+  } else {
+    m_nTriggerSource = MV_TRIGGER_SOURCE_LINE0;
+    _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
+    // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(FALSE);
+  }
+}
+
+void
+MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType)
+{
+  MV_SAVE_IMG_TO_FILE_PARAM stSaveFileParam;
+  memset(&stSaveFileParam, 0, sizeof(MV_SAVE_IMG_TO_FILE_PARAM));
+
+  EnterCriticalSection(&m_hSaveImageMux);
+  if (m_pSaveImageBuf == NULL || m_stImageInfo.enPixelType == 0) {
+    LeaveCriticalSection(&m_hSaveImageMux);
+    // TODOreturn MV_E_NODATA;
+  }
+
+  //  if(RemoveCustomPixelFormats(m_stImageInfo.enPixelType))
+  //  {
+  //    LeaveCriticalSection(&m_hSaveImageMux);
+  //    return MV_E_SUPPORT;
+  //  }
+
+  stSaveFileParam.enImageType =
+    enSaveImageType; // ch:需要保存的图像类型 | en:Image format to save
+  stSaveFileParam.enPixelType =
+    m_stImageInfo.enPixelType; // ch:相机对应的像素格式 | en:Camera pixel type
+  stSaveFileParam.nWidth = m_stImageInfo.nWidth; // ch:相机对应的宽 | en:Width
+  stSaveFileParam.nHeight =
+    m_stImageInfo.nHeight; // ch:相机对应的高 | en:Height
+  stSaveFileParam.nDataLen = m_stImageInfo.nFrameLen;
+  stSaveFileParam.pData = m_pSaveImageBuf;
+  stSaveFileParam.iMethodValue = 0;
+
+  // ch:jpg图像质量范围为(50-99], png图像质量范围为[0-9] | en:jpg image nQuality
+  // range is (50-99], png image nQuality range is [0-9]
+  if (MV_Image_Bmp == stSaveFileParam.enImageType) {
+    sprintf_s(stSaveFileParam.pImagePath,
+              256,
+              "Image_w%d_h%d_fn%03d.bmp",
+              stSaveFileParam.nWidth,
+              stSaveFileParam.nHeight,
+              m_stImageInfo.nFrameNum);
+  } else if (MV_Image_Jpeg == stSaveFileParam.enImageType) {
+    stSaveFileParam.nQuality = 80;
+    sprintf_s(stSaveFileParam.pImagePath,
+              256,
+              "Image_w%d_h%d_fn%03d.jpg",
+              stSaveFileParam.nWidth,
+              stSaveFileParam.nHeight,
+              m_stImageInfo.nFrameNum);
+  } else if (MV_Image_Tif == stSaveFileParam.enImageType) {
+    sprintf_s(stSaveFileParam.pImagePath,
+              256,
+              "Image_w%d_h%d_fn%03d.tif",
+              stSaveFileParam.nWidth,
+              stSaveFileParam.nHeight,
+              m_stImageInfo.nFrameNum);
+  } else if (MV_Image_Png == stSaveFileParam.enImageType) {
+    stSaveFileParam.nQuality = 8;
+    sprintf_s(stSaveFileParam.pImagePath,
+              256,
+              "Image_w%d_h%d_fn%03d.png",
+              stSaveFileParam.nWidth,
+              stSaveFileParam.nHeight,
+              m_stImageInfo.nFrameNum);
+  }
+
+  _chosen->SaveImageToFile(&stSaveFileParam);
+  LeaveCriticalSection(&m_hSaveImageMux);
+}
+
+void
 MvsCameraConfigUi::on_refreshButton_clicked()
 {
   auto camlist = MvsCameraWrapper::list_all();
@@ -387,4 +518,73 @@ MvsCameraConfigUi::Model::setData(const QModelIndex& index,
   }
 }
 
+// TODO
+void
+MvsCameraConfigUi::on_ContinueButton_clicked()
+{
+  //  ((CButton *)GetDlgItem(IDC_CONTINUS_MODE_RADIO))->SetCheck(TRUE);
+  //  ((CButton *)GetDlgItem(IDC_TRIGGER_MODE_RADIO))->SetCheck(FALSE);
+  //  ((CButton *)GetDlgItem(IDC_SOFTWARE_TRIGGER_CHECK))->EnableWindow(FALSE);
+  m_nTriggerMode = MV_TRIGGER_MODE_OFF;
+  SetTriggerMode();
+
+  // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON)->EnableWindow(FALSE);
+}
+
+void
+MvsCameraConfigUi::on_TriggerButton_clicked()
+{
+  update();
+  m_nTriggerMode = MV_TRIGGER_MODE_ON;
+  SetTriggerMode();
+  if (m_bStartGrabbing == TRUE) {
+    if (TRUE == m_bSoftWareTriggerCheck) {
+      // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(TRUE);
+    }
+  }
+}
+
+void
+MvsCameraConfigUi::on_SoftTrigger_clicked()
+{
+  update();
+  SetTriggerSource();
+}
+
+void
+MvsCameraConfigUi::on_SoftTriggerOnce_clicked()
+{
+  if (TRUE != m_bStartGrabbing) {
+    return;
+  }
+  _chosen->CommandExecute("TriggerSoftware");
+}
+
+void
+MvsCameraConfigUi::on_SaveJPGButton_clicked()
+{
+  SaveImage(MV_Image_Jpeg);
+}
+
+void
+MvsCameraConfigUi::on_SaveBMPButton_clicked()
+{
+  SaveImage(MV_Image_Bmp);
+}
+
+void
+MvsCameraConfigUi::on_SetExposureTime_clicked()
+{
+  update();
+  m_dExposureEdit = _ui->ExposureTime->text().toDouble();
+  SetExposureTime();
+}
+
+void
+MvsCameraConfigUi::on_GetExposureTime_clicked()
+{
+  GetTriggerMode();
+  GetExposureTime();
+  _ui->ExposureTime->setText(QString::number(m_dExposureEdit, 'f', 10));
+}
 }

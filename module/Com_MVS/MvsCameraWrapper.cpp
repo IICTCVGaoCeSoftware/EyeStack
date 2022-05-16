@@ -283,6 +283,49 @@ MvsCameraWrapper::is_connected() noexcept(false)
   return MV_CC_IsDeviceConnected(_handle);
 }
 
+void
+MvsCameraWrapper::GetEnumValue(const char* strKey, MVCC_ENUMVALUE* pEnumValue)
+{
+  ensure(MV_CC_GetEnumValue(_handle, strKey, pEnumValue));
+}
+
+void
+MvsCameraWrapper::SetEnumValue(const char* strKey, unsigned int nValue)
+{
+  ensure(MV_CC_SetEnumValue(_handle, strKey, nValue));
+}
+
+void
+MvsCameraWrapper::GetFloatValue(const char* strKey,
+                                MVCC_FLOATVALUE* pFloatValue)
+{
+  ensure(MV_CC_GetFloatValue(_handle, strKey, pFloatValue));
+}
+
+void
+MvsCameraWrapper::SetFloatValue(const char* strKey, float fValue)
+{
+  ensure(MV_CC_SetFloatValue(_handle, strKey, fValue));
+}
+
+void
+MvsCameraWrapper::CommandExecute(const char* strKey)
+{
+  ensure(MV_CC_SetCommandValue(_handle, strKey));
+}
+
+void
+MvsCameraWrapper::SaveImage(MV_SAVE_IMAGE_PARAM_EX* pstParam)
+{
+  ensure(MV_CC_SaveImageEx2(_handle, pstParam));
+}
+
+void
+MvsCameraWrapper::SaveImageToFile(MV_SAVE_IMG_TO_FILE_PARAM* pstSaveFileParam)
+{
+  ensure(MV_CC_SaveImageToFile(_handle, pstSaveFileParam));
+}
+
 // bool
 // MvsCameraWrapper::is_grabbing() noexcept(false)
 //{

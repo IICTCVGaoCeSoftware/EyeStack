@@ -89,6 +89,19 @@ public:
    */
   bool is_connected() noexcept(false);
 
+  // ch:获取和设置Enum型参数
+  void GetEnumValue(const char* strKey, MVCC_ENUMVALUE* pEnumValue);
+  void SetEnumValue(const char* strKey, unsigned int nValue);
+  // ch:获取和设置Float型参数
+  void GetFloatValue(const char* strKey, MVCC_FLOATVALUE* pFloatValue);
+  void SetFloatValue(const char* strKey, float fValue);
+  // ch:执行一次Command型命令
+  void CommandExecute(const char* strKey);
+  // ch:保存图片 | en:save image
+  void SaveImage(MV_SAVE_IMAGE_PARAM_EX* pstParam);
+  // ch:保存图片为文件 | en:Save the image as a file
+  void SaveImageToFile(MV_SAVE_IMG_TO_FILE_PARAM* pstSaveFileParam);
+
   //  /**
   //   * @threadsafe
   //   * @brief 检查相机是否已开始取流，如果相机没有打开，返回 false

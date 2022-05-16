@@ -144,6 +144,7 @@ private:
   unsigned int m_nSaveImageBufSize;
   MV_FRAME_OUT_INFO_EX m_stImageInfo;
   double m_dExposureEdit;
+  BOOL m_bSoftWareTriggerCheck;
 
 private:
   // 计算并更新所有与 _chosen 有关的界面组件状态
@@ -151,6 +152,15 @@ private:
 
   // 计算并更新所有与 _selected 有关的界面组件状态
   void update_selected();
+
+  void SetTriggerMode(); // ch:设置触发模式 | en:Set Trigger Mode
+  void GetTriggerMode();
+  void GetExposureTime(); // ch:设置曝光时间 | en:Set Exposure Time
+  void SetExposureTime();
+  void GetTriggerSource(); // ch:设置触发源 | en:Set Trigger Source
+  void SetTriggerSource();
+  void SaveImage(
+    MV_SAVE_IAMGE_TYPE enSaveImageType); // ch:保存图片 | en:Save Image
 
 private slots:
   // 点击刷新按钮重建相机列表，也是重新初始化 _model
@@ -178,6 +188,13 @@ private slots:
   // 相机属性按钮
   void on_impropButton_clicked();
   void on_expropButton_clicked();
+  void on_ContinueButton_clicked();
+  void on_TriggerButton_clicked();
+  void on_SoftTrigger_clicked();
+  void on_SoftTriggerOnce_clicked();
+  void on_SaveJPGButton_clicked();
+  void on_SaveBMPButton_clicked();
+  void on_SetExposureTime_clicked();
+  void on_GetExposureTime_clicked();
 };
-
 }
