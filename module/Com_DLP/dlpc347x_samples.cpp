@@ -40,8 +40,14 @@
 #include "Eyestack/Com_DLP/dlpc347x_samples.hpp"
 #include <iostream>
 
-static uint8_t s_HorizontalPatternData[TOTAL_HORIZONTAL_PATTERNS][MAX_HEIGHT];
-static uint8_t s_VerticalPatternData[TOTAL_VERTICAL_PATTERNS][MAX_WIDTH];
+static QVector<DLPC347X_INT_PAT_PatternSet_s> VPatternSet;
+static QVector<DLPC347X_INT_PAT_PatternData_s> V1bitPatternData;
+static QVector<DLPC347X_INT_PAT_PatternData_s> H1bitPatternData;
+static QVector<DLPC347X_INT_PAT_PatternData_s> H8bitPatternData;
+static QVector<DLPC347X_INT_PAT_PatternData_s> V8bitPatternData;
+static QVector<DLPC347X_INT_PAT_PatternOrderTableEntry_s> PatternTableEntry(4);
+static QVector<DLPC347X_INT_PAT_PatternData_s> PatternData;
+
 static DLPC347X_INT_PAT_PatternData_s
   s_Patterns[TOTAL_HORIZONTAL_PATTERNS + TOTAL_VERTICAL_PATTERNS];
 static DLPC347X_INT_PAT_PatternSet_s s_PatternSets[NUM_PATTERN_SETS];
@@ -54,13 +60,10 @@ static uint8_t s_ReadBuffer[MAX_READ_CMD_PAYLOAD];
 static bool s_StartProgramming;
 static uint8_t s_FlashProgramBuffer[FLASH_WRITE_BLOCK_SIZE];
 static uint16_t s_FlashProgramBufferPtr;
-static uint8_t HorzPatternIdx = 0;
 static uint8_t VertPatternIdx = 0;
 static uint8_t PatternIdx = 0;
 static uint8_t PatternSetIdx = 0;
 static uint32_t PatternOrderTableIdx = 0;
-// uint32_t PatternSetIdx = 0;
-
 static FILE* s_FilePointer;
 
 /**
@@ -125,134 +128,61 @@ WaitForSeconds(uint32_t Seconds)
   while (time(0) < retTime)
     ; // Loop until it arrives.
 }
-/**
- * A sample function that generates a 1-bit (binary) 1-D pattern
- * The function fills the byte array Data. Each byte in the in array corresponds
- * to a pixel. For a 1-bit pattern the value of each byte should be 1 or 0.
- */
+
 void
-PopulateOneBitPatternData(uint16_t Length, uint8_t* Data, uint16_t NumBars)
+Populate1BitHorizonPatternSet(uint16_t DMDWidth, uint16_t DMDHeight)
 {
-  uint16_t PixelPos = 0;
-  uint16_t BarPos = 0;
-  uint16_t BarWidth = Length / NumBars;
-  uint8_t PixelData = 0;
-
-  for (; PixelPos < Length; PixelPos++) {
-    Data[PixelPos] = PixelData;
-
-    BarPos++;
-    if (BarPos >= BarWidth) {
-      BarPos = 0;
-      PixelData = (PixelData == 0 ? 1 : 0);
-    }
-  }
+  DLPC347X_INT_PAT_PatternSet_s PatternSet;
+  PatternSet.BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
+  PatternSet.Direction = DLPC347X_INT_PAT_DIRECTION_HORIZONTAL;
+  PatternSet.PatternCount = 0;
+  PatternSet.PatternArray = nullptr;
+  VPatternSet.push_back(PatternSet);
+  PatternSetIdx++;
 }
 
-/**
- * A sample function that generates an 8-bit (gray scale) 1-D pattern
- * The function fills the byte array Data. Each byte in the in array corresponds
- * to a pixel. For an 8-bit pattern the value of each byte can be 0 - 255.
- */
 void
-PopulateEightBitPatternData(uint16_t Length, uint8_t* Data, uint16_t NumBars)
+Populate8BitHorizonPatternSet(uint16_t DMDWidth, uint16_t DMDHeight)
 {
-  uint16_t PixelPos = 0;
-  uint16_t BarPos = 0;
-  uint16_t BarWidth = Length / (2 * NumBars);
-  uint8_t PixelData = 0;
-  int16_t PixelDataInc = (int16_t)ceil(255.0 / BarWidth);
-
-  for (; PixelPos < Length; PixelPos++) {
-    Data[PixelPos] = PixelData;
-
-    BarPos++;
-    if (BarPos >= BarWidth) {
-      BarPos = 0;
-      PixelDataInc = -PixelDataInc;
-    }
-
-    PixelData = (uint8_t)(PixelData + PixelDataInc);
-  }
+  DLPC347X_INT_PAT_PatternSet_s PatternSet;
+  PatternSet.BitDepth = DLPC347X_INT_PAT_BITDEPTH_EIGHT;
+  PatternSet.Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
+  PatternSet.PatternCount = 0;
+  PatternSet.PatternArray = nullptr;
+  VPatternSet.push_back(PatternSet);
+  PatternSetIdx++;
 }
 
-/**
- * Populates an array of DLPC347X_INT_PAT_PatternSet_s
- */
 void
-PopulatePatternSetData(uint16_t DMDWidth, uint16_t DMDHeight)
+Populate1BitVerticalPatternSet(uint16_t DMDWidth, uint16_t DMDHeight)
 {
-  uint8_t HorzPatternIdx = 0;
-  uint8_t VertPatternIdx = 0;
-  uint8_t PatternIdx = 0;
-  uint8_t PatternSetIdx = 0;
-  uint8_t Index;
-  uint16_t NumBars;
-  DLPC347X_INT_PAT_PatternSet_s* PatternSet;
+  DLPC347X_INT_PAT_PatternSet_s PatternSet;
+  PatternSet.BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
+  PatternSet.Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
+  PatternSet.PatternCount = 0;
+  PatternSet.PatternArray = nullptr;
+  VPatternSet.push_back(PatternSet);
+  PatternSetIdx++;
+}
 
-  /* Create a 1-bit (binary) Horizontal Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_HORIZONTAL;
-  PatternSet->PatternCount = NUM_ONE_BIT_HORIZONTAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-  for (Index = 0; Index < NUM_ONE_BIT_HORIZONTAL_PATTERNS; Index++) {
-    NumBars = 2 * (Index + 1);
-    PopulateOneBitPatternData(
-      DMDHeight, s_HorizontalPatternData[HorzPatternIdx], NumBars);
-    s_Patterns[PatternIdx].PixelArray = s_HorizontalPatternData[HorzPatternIdx];
-    s_Patterns[PatternIdx].PixelArrayCount = DMDHeight;
-    PatternIdx++;
-    HorzPatternIdx++;
-  }
+void
+Populate8BitVerticalPatternSet(uint16_t DMDWidth, uint16_t DMDHeight)
+{
+  DLPC347X_INT_PAT_PatternSet_s PatternSet;
+  PatternSet.BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
+  PatternSet.Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
+  PatternSet.PatternCount = 0;
+  PatternSet.PatternArray = nullptr;
+  VPatternSet.push_back(PatternSet);
+  PatternSetIdx++;
+}
 
-  /* Create a 1-bit (binary) Vertical Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
-  PatternSet->PatternCount = NUM_ONE_BIT_VERTICAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-  for (Index = 0; Index < NUM_ONE_BIT_VERTICAL_PATTERNS; Index++) {
-    NumBars = 2 * (Index + 1);
-    PopulateOneBitPatternData(
-      DMDWidth, s_VerticalPatternData[VertPatternIdx], NumBars);
-    s_Patterns[PatternIdx].PixelArray = s_VerticalPatternData[VertPatternIdx];
-    s_Patterns[PatternIdx].PixelArrayCount = DMDWidth;
-    PatternIdx++;
-    VertPatternIdx++;
-  }
-
-  /* Create an 8-bit (grayscale) Horizontal Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_EIGHT;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_HORIZONTAL;
-  PatternSet->PatternCount = NUM_EIGHT_BIT_HORIZONTAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-  for (Index = 0; Index < NUM_EIGHT_BIT_HORIZONTAL_PATTERNS; Index++) {
-    NumBars = 2 * (Index + 1);
-    PopulateEightBitPatternData(
-      DMDHeight, s_HorizontalPatternData[HorzPatternIdx], NumBars);
-    s_Patterns[PatternIdx].PixelArray = s_HorizontalPatternData[HorzPatternIdx];
-    s_Patterns[PatternIdx].PixelArrayCount = DMDHeight;
-    PatternIdx++;
-    HorzPatternIdx++;
-  }
-
-  /* Create an 8-bit (grayscale) Vertical Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_EIGHT;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
-  PatternSet->PatternCount = NUM_EIGHT_BIT_VERTICAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-  for (Index = 0; Index < NUM_EIGHT_BIT_VERTICAL_PATTERNS; Index++) {
-    NumBars = 2 * (Index + 1);
-    PopulateEightBitPatternData(
-      DMDWidth, s_VerticalPatternData[VertPatternIdx], NumBars);
-    s_Patterns[PatternIdx].PixelArray = s_VerticalPatternData[VertPatternIdx];
-    s_Patterns[PatternIdx].PixelArrayCount = DMDWidth;
-    PatternIdx++;
-    VertPatternIdx++;
-  }
+void
+DeletePatternSet(int i)
+{
+  // VPatternSet[i]->PatternArray = nullptr;
+  VPatternSet.remove(i);
+  PatternSetIdx--;
 }
 
 void
@@ -260,26 +190,29 @@ Populate1BitHorizonPattern(uint16_t DMDWidth,
                            uint16_t DMDHeight,
                            QString filename)
 {
-
-  DLPC347X_INT_PAT_PatternSet_s* PatternSet;
-  /* Create a 1-bit (binary) Horizontal Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_HORIZONTAL;
-  PatternSet->PatternCount = NUM_ONE_BIT_HORIZONTAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-
   cv::Mat image = cv::imread(filename.toStdString(), 0);
   uint8_t* array = new unsigned char[image.rows * image.cols];
-  for (uint8_t i = 0; i < DMDHeight; i++) {
-    s_HorizontalPatternData[HorzPatternIdx][i] = array[i];
-  }
-  s_Patterns[PatternIdx].PixelArray = array;
-  s_Patterns[PatternIdx].PixelArrayCount = DMDHeight;
+  if (image.isContinuous())
+    array = image.data;
+  DLPC347X_INT_PAT_PatternData_s data;
+  data.PixelArray = array;
+  data.PixelArrayCount = DMDHeight;
+  H1bitPatternData.push_back(data);
+}
 
-  std::cout << s_HorizontalPatternData[HorzPatternIdx][300];
-  PatternIdx++;
-  HorzPatternIdx++;
+void
+Populate8BitHorizonPattern(uint16_t DMDWidth,
+                           uint16_t DMDHeight,
+                           QString filename)
+{
+  cv::Mat image = cv::imread(filename.toStdString(), 0);
+  uint8_t* array = new unsigned char[image.rows * image.cols];
+  if (image.isContinuous())
+    array = image.data;
+  DLPC347X_INT_PAT_PatternData_s data;
+  data.PixelArray = array;
+  data.PixelArrayCount = DMDHeight;
+  H8bitPatternData.push_back(data);
 }
 
 void
@@ -287,103 +220,153 @@ Populate1BitVerticalPattern(uint16_t DMDWidth,
                             uint16_t DMDHeight,
                             QString filename)
 {
-
-  DLPC347X_INT_PAT_PatternSet_s* PatternSet;
-  /* Create a 1-bit (binary) Vertical Pattern Set */
-  PatternSet = &s_PatternSets[PatternSetIdx++];
-  PatternSet->BitDepth = DLPC347X_INT_PAT_BITDEPTH_ONE;
-  PatternSet->Direction = DLPC347X_INT_PAT_DIRECTION_VERTICAL;
-  PatternSet->PatternCount = NUM_ONE_BIT_VERTICAL_PATTERNS;
-  PatternSet->PatternArray = &s_Patterns[PatternIdx];
-
   cv::Mat image = cv::imread(filename.toStdString(), 0);
   uint8_t* array = new unsigned char[image.rows * image.cols];
-  for (unsigned short i = 0; i < DMDWidth; i++) {
-    s_VerticalPatternData[VertPatternIdx][i] = array[i];
-    //
-  }
-  s_Patterns[PatternIdx].PixelArray = s_VerticalPatternData[VertPatternIdx];
-  s_Patterns[PatternIdx].PixelArrayCount = DMDWidth;
-
-  qDebug() << s_VerticalPatternData[VertPatternIdx][1000];
-  qDebug() << array[1000];
-  PatternIdx++;
-  HorzPatternIdx++;
-}
-/**
- * Populates an array of DLPC347X_INT_PAT_PatternOrderTableEntry_s
- */
-void
-PopulatePatternTableData()
-{
-
-  DLPC347X_INT_PAT_PatternOrderTableEntry_s* PatternOrderTableEntry;
-
-  /* Pattern Table Entry 0 - uses Pattern Set 0 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_RED;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = 5000;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = 250;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = 1000;
-
-  /* Pattern Table Entry 1 - uses Pattern Set 1 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_GREEN;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = 5000;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = 250;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = 1000;
-
-  /* Pattern Table Entry 2 - uses Pattern Set 2 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_BLUE;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = 5000;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = 250;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = 1000;
-
-  /* Pattern Table Entry 3 - uses Pattern Set 3 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_RGB;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = 11000;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = 250;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = 1000;
+  if (image.isContinuous())
+    array = image.data;
+  DLPC347X_INT_PAT_PatternData_s data;
+  data.PixelArray = array;
+  data.PixelArrayCount = DMDHeight;
+  V1bitPatternData.push_back(data);
 }
 
 void
-PopulatePatternTableData_Demo()
+Populate8BitVerticalPattern(uint16_t DMDWidth,
+                            uint16_t DMDHeight,
+                            QString filename)
 {
-  DLPC347X_INT_PAT_PatternOrderTableEntry_s* PatternOrderTableEntry;
+  cv::Mat image = cv::imread(filename.toStdString(), 0);
+  uint8_t* array = new unsigned char[image.rows * image.cols];
+  if (image.isContinuous())
+    array = image.data;
+  DLPC347X_INT_PAT_PatternData_s data;
+  data.PixelArray = array;
+  data.PixelArrayCount = DMDWidth;
+  V8bitPatternData.push_back(data);
+}
 
-  /* Pattern Table Entry 0 - uses Pattern Set 0 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_RED;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = 5000;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = 250;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = 1000;
+void
+Populate1BitHorizonPatternEntry(QString sel,
+                                unsigned int ill,
+                                unsigned int pre,
+                                unsigned int post)
+{
+  DLPC347X_INT_PAT_PatternOrderTableEntry_s PatternOrderTableEntry;
+  /* Create a 1-bit (binary) Horizontal Pattern Table Entry */
+  PatternOrderTableEntry = PatternTableEntry[0];
+  PatternOrderTableEntry.PatternSetIndex = 0;
+  PatternOrderTableEntry.NumDisplayPatterns = H1bitPatternData.size();
+
+  if (sel == "R")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RED;
+  else if (sel == "G")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_GREEN;
+  else if (sel == "B")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_BLUE;
+  else if (sel == "RGB")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RGB;
+
+  PatternOrderTableEntry.InvertPatterns = false;
+  PatternOrderTableEntry.IlluminationTimeInMicroseconds = ill;
+  PatternOrderTableEntry.PreIlluminationDarkTimeInMicroseconds = pre;
+  PatternOrderTableEntry.PostIlluminationDarkTimeInMicroseconds = post;
+}
+
+void
+Populate8BitHorizonPatternEntry(QString sel,
+                                unsigned int ill,
+                                unsigned int pre,
+                                unsigned int post)
+{
+  DLPC347X_INT_PAT_PatternOrderTableEntry_s PatternOrderTableEntry;
+  /* Create a 8-bit (binary) Horizontal Pattern Table Entry */
+  PatternOrderTableEntry = PatternTableEntry[1];
+  PatternOrderTableEntry.PatternSetIndex = 0;
+  PatternOrderTableEntry.NumDisplayPatterns = H8bitPatternData.size();
+
+  if (sel == "R")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RED;
+  else if (sel == "G")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_GREEN;
+  else if (sel == "B")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_BLUE;
+  else if (sel == "RGB")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RGB;
+
+  PatternOrderTableEntry.InvertPatterns = false;
+  PatternOrderTableEntry.IlluminationTimeInMicroseconds = ill;
+  PatternOrderTableEntry.PreIlluminationDarkTimeInMicroseconds = pre;
+  PatternOrderTableEntry.PostIlluminationDarkTimeInMicroseconds = post;
+}
+
+void
+Populate1BitVerticalPatternEntry(QString sel,
+                                 unsigned int ill,
+                                 unsigned int pre,
+                                 unsigned int post)
+{
+  DLPC347X_INT_PAT_PatternOrderTableEntry_s PatternOrderTableEntry;
+  /* Create a 1-bit (binary) Vertical Pattern Table Entry */
+  PatternOrderTableEntry = PatternTableEntry[2];
+  PatternOrderTableEntry.PatternSetIndex = 0;
+  PatternOrderTableEntry.NumDisplayPatterns = H8bitPatternData.size();
+
+  if (sel == "R")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RED;
+  else if (sel == "G")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_GREEN;
+  else if (sel == "B")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_BLUE;
+  else if (sel == "RGB")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RGB;
+
+  PatternOrderTableEntry.InvertPatterns = false;
+  PatternOrderTableEntry.IlluminationTimeInMicroseconds = ill;
+  PatternOrderTableEntry.PreIlluminationDarkTimeInMicroseconds = pre;
+  PatternOrderTableEntry.PostIlluminationDarkTimeInMicroseconds = post;
+}
+
+void
+Populate8BitVerticalPatternEntry(QString sel,
+                                 unsigned int ill,
+                                 unsigned int pre,
+                                 unsigned int post)
+{
+  DLPC347X_INT_PAT_PatternOrderTableEntry_s PatternOrderTableEntry;
+  /* Create a 8-bit (binary) Vertical Pattern Table Entry */
+  PatternOrderTableEntry = PatternTableEntry[3];
+  PatternOrderTableEntry.PatternSetIndex = 0;
+  PatternOrderTableEntry.NumDisplayPatterns = H8bitPatternData.size();
+
+  if (sel == "R")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RED;
+  else if (sel == "G")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_GREEN;
+  else if (sel == "B")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_BLUE;
+  else if (sel == "RGB")
+    PatternOrderTableEntry.IlluminationSelect =
+      DLPC347X_INT_PAT_ILLUMINATION_RGB;
+
+  PatternOrderTableEntry.InvertPatterns = false;
+  PatternOrderTableEntry.IlluminationTimeInMicroseconds = ill;
+  PatternOrderTableEntry.PreIlluminationDarkTimeInMicroseconds = pre;
+  PatternOrderTableEntry.PostIlluminationDarkTimeInMicroseconds = post;
 }
 
 void
@@ -567,25 +550,6 @@ WriteTestPatternGridLines()
   WaitForSeconds(5);
 }
 
-// void
-// WriteTestPatternColorBar()
-//{
-//   /* Write Input Image Size */
-//   DLPC347X_WriteInputImageSize(MAX_WIDTH, MAX_HEIGHT);
-
-//  /* Write Image Crop */
-//  DLPC347X_WriteImageCrop(0, 0, MAX_WIDTH, MAX_HEIGHT);
-
-//  /* Write Display Size */
-//  DLPC347X_WriteDisplaySize(0, 0, MAX_WIDTH, MAX_HEIGHT);
-
-//  /* Write Color Bar & Select Test Pattern */
-//  DLPC34XX_WriteColorbars(DLPC34XX_BE_ENABLE);
-
-//  DLPC34XX_WriteOperatingModeSelect(DLPC34XX_OM_TEST_PATTERN_GENERATOR);
-//  WaitForSeconds(10);
-//}
-
 void
 WriteLookSelect(uint8_t LookNumber)
 {
@@ -649,19 +613,45 @@ LoadPreBuildPatternData()
 }
 
 void
-setExposureTime(unsigned int Ill, unsigned int preIll, unsigned int postIll)
+MergeH1PatternData(uint8_t seq)
 {
-  DLPC347X_INT_PAT_PatternOrderTableEntry_s* PatternOrderTableEntry;
+  uint8_t pos = PatternData.size();
+  for (uint8_t i = 0; i < H1bitPatternData.size(); ++i) {
+    PatternData.push_back(H1bitPatternData[i]);
+  }
+  VPatternSet[seq].PatternArray = &PatternData[pos];
+  VPatternSet[seq].PatternCount = pos;
+}
 
-  /* Pattern Table Entry 0 - uses Pattern Set 0 */
-  PatternOrderTableEntry = &s_PatternOrderTable[PatternOrderTableIdx++];
-  PatternOrderTableEntry->PatternSetIndex = PatternSetIdx;
-  PatternOrderTableEntry->NumDisplayPatterns =
-    s_PatternSets[PatternSetIdx++].PatternCount;
-  PatternOrderTableEntry->IlluminationSelect =
-    DLPC347X_INT_PAT_ILLUMINATION_RED;
-  PatternOrderTableEntry->InvertPatterns = false;
-  PatternOrderTableEntry->IlluminationTimeInMicroseconds = Ill;
-  PatternOrderTableEntry->PreIlluminationDarkTimeInMicroseconds = preIll;
-  PatternOrderTableEntry->PostIlluminationDarkTimeInMicroseconds = postIll;
+void
+MergeV1PatternData(uint8_t seq)
+{
+  uint8_t pos = PatternData.size();
+  for (uint8_t i = 0; i < V1bitPatternData.size(); ++i) {
+    PatternData.push_back(V1bitPatternData[i]);
+  }
+  VPatternSet[seq].PatternArray = &PatternData[pos];
+  VPatternSet[seq].PatternCount = pos;
+}
+
+void
+MergeH8PatternData(uint8_t seq)
+{
+  uint8_t pos = PatternData.size();
+  for (uint8_t i = 0; i < H8bitPatternData.size(); ++i) {
+    PatternData.push_back(H8bitPatternData[i]);
+  }
+  VPatternSet[seq].PatternArray = &PatternData[pos];
+  VPatternSet[seq].PatternCount = pos;
+}
+
+void
+MergeV8PatternData(uint8_t seq)
+{
+  uint8_t pos = PatternData.size();
+  for (uint8_t i = 0; i < V8bitPatternData.size(); ++i) {
+    PatternData.push_back(V8bitPatternData[i]);
+  }
+  VPatternSet[seq].PatternArray = &PatternData[pos];
+  VPatternSet[seq].PatternCount = pos;
 }

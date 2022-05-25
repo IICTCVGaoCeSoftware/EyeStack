@@ -41,11 +41,42 @@ ReadI2C(uint16_t WriteDataLength,
         uint8_t* ReadData,
         DLPC_COMMON_CommandProtocolData_s* ProtocolData);
 
-void InitConnectionAndCommandLayer();
-void WaitForSeconds(uint32_t Seconds);
-void PopulateOneBitPatternData(uint16_t Length, uint8_t* Data, uint16_t NumBars);
-void PopulateEightBitPatternData(uint16_t Length, uint8_t* Data, uint16_t NumBars);
-void PopulatePatternSetData(uint16_t DMDWidth, uint16_t DMDHeight);
+void
+InitConnectionAndCommandLayer();
+
+void
+WaitForSeconds(uint32_t Seconds);
+
+/**
+ * @brief 生成1位水平PatternSet
+ */
+void
+Populate1BitHorizonPatternSet(uint16_t DMDWidth, uint16_t DMDHeight);
+
+/**
+ * @brief 生成8位水平PatternSet
+ */
+void
+Populate8BitHorizonPatternSet(uint16_t DMDWidth, uint16_t DMDHeight);
+
+/**
+ * @brief 生成1位垂直PatternSet
+ */
+void
+Populate1BitVerticalPatternSet(uint16_t DMDWidth, uint16_t DMDHeight);
+
+/**
+ * @brief 生成8位垂直PatternSet
+ */
+void
+Populate8BitVerticalPatternSet(uint16_t DMDWidth, uint16_t DMDHeight);
+
+/**
+ * @brief 删除PatternSet
+ */
+void
+DeletePatternSet(int i);
+
 void
 Populate1BitHorizonPattern(uint16_t DMDWidth,
                            uint16_t DMDHeight,
@@ -55,9 +86,39 @@ Populate1BitVerticalPattern(uint16_t DMDWidth,
                             uint16_t DMDHeight,
                             QString filename);
 
-void PopulatePatternTableData();
+/**
+ * @brief 1位水平集的配置
+ */
 void
-PopulatePatternTableData_Demo();
+Populate1BitHorizonPatternEntry(QString sel = "R",
+                                unsigned int ill = 5000,
+                                unsigned int pre = 250,
+                                unsigned int post = 1000);
+/**
+ * @brief 8位水平集的配置
+ */
+void
+Populate8BitHorizonPatternEntry(QString sel = "R",
+                                unsigned int ill = 5000,
+                                unsigned int pre = 250,
+                                unsigned int post = 1000);
+/**
+ * @brief 1位垂直集的配置
+ */
+void
+Populate1BitVerticalPatternEntry(QString sel = "R",
+                                 unsigned int ill = 5000,
+                                 unsigned int pre = 250,
+                                 unsigned int post = 1000);
+/**
+ * @brief 8位垂直集的配置
+ */
+void
+Populate8BitVerticalPatternEntry(QString sel = "R",
+                                 unsigned int ill = 5000,
+                                 unsigned int pre = 250,
+                                 unsigned int post = 1000);
+
 void CopyDataToFlashProgramBuffer(uint8_t* Length, uint8_t** DataPtr);
 void ProgramFlashWithDataInBuffer(uint16_t Length);
 void WriteDataToFile(uint8_t Length, uint8_t* Data);
@@ -70,4 +131,11 @@ void WriteTestPatternGridLines();
 void WriteLookSelect(uint8_t LookNumber);
 void LoadPreBuildPatternData();
 
-
+void
+MergeH1PatternData(uint8_t seq);
+void
+MergeV1PatternData(uint8_t seq);
+void
+MergeH8PatternData(uint8_t seq);
+void
+MergeV8PatternData(uint8_t seq);

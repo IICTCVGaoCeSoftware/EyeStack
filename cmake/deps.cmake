@@ -29,3 +29,6 @@ add_compile_definitions(
 
 # OpenCV
 find_package(OpenCV REQUIRED)
+
+# PCL 1.10
+find_package(PCL 1.10 REQUIRED)

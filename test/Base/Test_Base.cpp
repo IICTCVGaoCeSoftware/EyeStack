@@ -1,5 +1,7 @@
 #include "Test_Base.hpp"
 
+#include <boost/thread/thread.hpp>
+
 #define BOOST_TEST_MODULE Test_Base
 #include <boost/test/unit_test.hpp>
 

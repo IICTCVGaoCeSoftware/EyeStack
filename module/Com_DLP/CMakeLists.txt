@@ -19,6 +19,8 @@ add_library(Com_DLP SHARED
 
   ${_inc}/dlpc347x_samples.hpp dlpc347x_samples.cpp
 
+  ${_inc}/DLP.hpp DLP.cpp
+
   ${_inc}/dlpconfigui.h dlpconfigui.cpp dlpconfigui.ui
 )
 
@@ -42,4 +44,4 @@ target_precompile_headers(Com_DLP REUSE_FROM pch)
 # 部署规则
  install(TARGETS Com_DLP EXPORT ${EXPORT_TARGETS})
 install(DIRECTORY inc DESTINATION .)
- install(DIRECTORY third_party DESTINATION module/Com_DLP)
+ install(DIRECTORY official DESTINATION module/Com_DLP)
