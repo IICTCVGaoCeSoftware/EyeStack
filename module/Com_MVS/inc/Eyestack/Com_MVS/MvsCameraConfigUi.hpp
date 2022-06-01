@@ -153,14 +153,23 @@ private:
   // 计算并更新所有与 _selected 有关的界面组件状态
   void update_selected();
 
-  void SetTriggerMode(); // ch:设置触发模式 | en:Set Trigger Mode
+  // 获取和设置触发模式
+  void SetTriggerMode();
   void GetTriggerMode();
-  void GetExposureTime(); // ch:设置曝光时间 | en:Set Exposure Time
+
+  // 获取和设置曝光时间
+  void GetExposureTime();
   void SetExposureTime();
-  void GetTriggerSource(); // ch:设置触发源 | en:Set Trigger Source
+
+  // 获取和设置触发源
+  void GetTriggerSource();
   void SetTriggerSource();
-  void SaveImage(
-    MV_SAVE_IAMGE_TYPE enSaveImageType); // ch:保存图片 | en:Save Image
+
+  // 保存图片
+  void SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc);
+
+  // 自定义格式不支持显示
+  bool RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat);
 
 private slots:
   // 点击刷新按钮重建相机列表，也是重新初始化 _model
@@ -188,10 +197,18 @@ private slots:
   // 相机属性按钮
   void on_impropButton_clicked();
   void on_expropButton_clicked();
+
+  // 连续模式按钮
   void on_ContinueButton_clicked();
+
+  // 触发模式按钮
   void on_TriggerButton_clicked();
+
+  // 软触发设置
   void on_SoftTrigger_clicked();
   void on_SoftTriggerOnce_clicked();
+
+  // 保存图片按钮
   void on_SaveJPGButton_clicked();
   void on_SaveBMPButton_clicked();
   void on_SetExposureTime_clicked();

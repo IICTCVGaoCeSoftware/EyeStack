@@ -1,5 +1,6 @@
 #include "Eyestack/Com_DLP/dlpconfigui.h"
 #include "ui_dlpconfigui.h"
+#include <iostream>
 
 namespace Eyestack::Com_DLP {
 
@@ -9,6 +10,29 @@ DLPConfigUi::DLPConfigUi(QWidget* parent)
 {
   _ui->setupUi(this);
   setupUi();
+  _ui->groupBox->setAlignment(Qt::AlignHCenter);
+
+  _fore = new QButtonGroup(this);
+  _fore->addButton(_ui->radioButton_3, 1);
+  _fore->addButton(_ui->radioButton_4, 2);
+  _fore->addButton(_ui->radioButton_5, 3);
+  _fore->addButton(_ui->radioButton_6, 4);
+  _fore->addButton(_ui->radioButton_7, 5);
+  _fore->addButton(_ui->radioButton_8, 6);
+  _fore->addButton(_ui->radioButton_9, 7);
+  _fore->addButton(_ui->radioButton_10, 8);
+  _back = new QButtonGroup(this);
+  _back->addButton(_ui->radioButton_11, 11);
+  _back->addButton(_ui->radioButton_12, 12);
+  _back->addButton(_ui->radioButton_13, 13);
+  _back->addButton(_ui->radioButton_14, 14);
+  _back->addButton(_ui->radioButton_15, 15);
+  _back->addButton(_ui->radioButton_16, 16);
+  _back->addButton(_ui->radioButton_17, 17);
+  _back->addButton(_ui->radioButton_18, 18);
+
+  connect(_fore, SIGNAL(buttonClicked(int)), this, SLOT(handleRadioGroup(int)));
+  connect(_back, SIGNAL(buttonClicked(int)), this, SLOT(handleRadioGroup(int)));
 }
 
 DLPConfigUi::~DLPConfigUi()
@@ -19,19 +43,16 @@ DLPConfigUi::~DLPConfigUi()
 void
 DLPConfigUi::setupUi()
 {
-  _ui->comboBox->setItemIcon(
+  _ui->_selectPatternSet->setItemIcon(
     1, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-horizontal-solid.svg"));
-  _ui->comboBox->setItemIcon(
+  _ui->_selectPatternSet->setItemIcon(
     2, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-lines-vertical-solid.svg"));
-  _ui->comboBox->setItemIcon(
+  _ui->_selectPatternSet->setItemIcon(
     3, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-horizontal-solid.svg"));
-  _ui->comboBox->setItemIcon(
+  _ui->_selectPatternSet->setItemIcon(
     4, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-lines-vertical-solid.svg"));
-  _ui->SaveButton->setIcon(QIcon("D:/ICAC/DLPC-API-1.1/Asset/save-solid.svg"));
   _ui->ProgramButton->setIcon(
     QIcon("D:/ICAC/DLPC-API-1.1/Asset/download-solid.svg"));
-  _ui->LoadButton->setIcon(
-    QIcon("D:/ICAC/DLPC-API-1.1/Asset/file-upload-solid.svg"));
   _ui->ImageButton->setIcon(
     QIcon("D:/ICAC/DLPC-API-1.1/Asset/image-solid.svg"));
   _ui->ConfigTable->verticalHeader()->setVisible(true);
@@ -44,36 +65,21 @@ void
 DLPConfigUi::on_ProgramButton_clicked()
 {
   /* Generate and program the pattern data to the controller flash */
-  //    GenerateAndProgramPatternData(DLPC347X_INT_PAT_DMD_DLP3010);
-
-  //    /* Load Pattern Order Table Entry from Flash */
-  //    // 从Flash读入配置进入Order table
-  //    LoadPatternOrderTableEntryfromFlash();
-
-  //    /* Generate and write pattern data to a file */
-  //    GenerateAndWritePatternDataToFile(DLPC347X_INT_PAT_DMD_DLP3010,
-  //                                      "pattern_data.bin");
+  GenerateAndProgramPatternData(DLPC347X_INT_PAT_DMD_DLP3010);
+  /* Load Pattern Order Table Entry from Flash */
+  LoadPatternOrderTableEntryfromFlash();
+  /* Generate and write pattern data to a file */
+  GenerateAndWritePatternDataToFile(DLPC347X_INT_PAT_DMD_DLP3010,
+                                    "pattern_data.bin");
 
   QMessageBox MBox;
   MBox.setWindowTitle("提示");
   MBox.setText("编译成功");
   MBox.exec();
-  //  /* Display patterns */
-  //  DLPC347X_WriteOperatingModeSelect(DLPC347X_OM_SENS_INTERNAL_PATTERN);
-  //  DLPC347X_WriteInternalPatternControl(DLPC347X_PC_START, 0xFF);
 }
 
 void
-DLPConfigUi::on_LoadButton_clicked()
-{
-  QString filename = QFileDialog::getOpenFileName(
-    this, "Add A Pattern", "/", "BinaryFile(*.bin)");
-  // LoadPreBuildPatternData(filename);
-  // LoadPatternOrderTableEntryfromFlash();
-}
-
-void
-DLPConfigUi::on_comboBox_currentIndexChanged(int index)
+DLPConfigUi::on__selectPatternSet_currentIndexChanged(int index)
 {
   if (PatternIdx > 4) {
     PatternIdx = 5;
@@ -81,16 +87,19 @@ DLPConfigUi::on_comboBox_currentIndexChanged(int index)
   }
   QString s2;
 
-  if (_ui->comboBox->currentText() == "Add 1-bit Horizontal Pattern") {
+  if (_ui->_selectPatternSet->currentText() == "Add 1-bit Horizontal Pattern") {
     s2 = "1-bit : Horizontal Pattern";
     Populate1BitHorizonPatternSet(DLP3010_WIDTH, DLP3010_HEIGHT);
-  } else if (_ui->comboBox->currentText() == "Add 1-bit Vertical Pattern") {
+  } else if (_ui->_selectPatternSet->currentText() ==
+             "Add 1-bit Vertical Pattern") {
     s2 = "1-bit : Vertical Pattern";
     Populate1BitVerticalPatternSet(DLP3010_WIDTH, DLP3010_HEIGHT);
-  } else if (_ui->comboBox->currentText() == "Add 8-bit Horizontal Pattern") {
+  } else if (_ui->_selectPatternSet->currentText() ==
+             "Add 8-bit Horizontal Pattern") {
     s2 = "8-bit : Horizontal Pattern";
     Populate8BitHorizonPatternSet(DLP3010_WIDTH, DLP3010_HEIGHT);
-  } else if (_ui->comboBox->currentText() == "Add 8-bit Vertical Pattern") {
+  } else if (_ui->_selectPatternSet->currentText() ==
+             "Add 8-bit Vertical Pattern") {
     s2 = "8-bit : Vertical Pattern";
     Populate8BitVerticalPatternSet(DLP3010_WIDTH, DLP3010_HEIGHT);
   } else {
@@ -138,13 +147,6 @@ DLPConfigUi::on_ImageButton_clicked()
   }
 
   Populate1BitVerticalPattern(DLP3010_WIDTH, DLP3010_HEIGHT, filename);
-}
-
-void
-DLPConfigUi::on_SaveButton_clicked()
-{
-  GenerateAndWritePatternDataToFile(DLPC347X_INT_PAT_DMD_DLP3010,
-                                    "pattern_data.bin");
 }
 
 void
@@ -324,4 +326,51 @@ DLPConfigUi::on_ApplyButton_clicked()
     }
   }
 }
+
+void
+DLPConfigUi::on_ChessShow_clicked()
+{
+  unsigned short h = _ui->spinBox->text().toUShort();
+  unsigned short v = _ui->spinBox_2->text().toUShort();
+  SetChessboardConfig(fore, back, h, v);
+}
+
+void
+DLPConfigUi::handleRadioGroup(int id)
+{
+  if (id == 1) {
+    fore = DLPC347X_C_BLACK;
+  } else if (id == 2) {
+    fore = DLPC347X_C_RED;
+  } else if (id == 3) {
+    fore = DLPC347X_C_GREEN;
+  } else if (id == 4) {
+    fore = DLPC347X_C_BLUE;
+  } else if (id == 5) {
+    fore = DLPC347X_C_CYAN;
+  } else if (id == 6) {
+    fore = DLPC347X_C_MAGENTA;
+  } else if (id == 7) {
+    fore = DLPC347X_C_YELLOW;
+  } else if (id == 8) {
+    fore = DLPC347X_C_WHITE;
+  } else if (id == 11) {
+    back = DLPC347X_C_BLACK;
+  } else if (id == 12) {
+    back = DLPC347X_C_RED;
+  } else if (id == 13) {
+    back = DLPC347X_C_GREEN;
+  } else if (id == 14) {
+    back = DLPC347X_C_BLUE;
+  } else if (id == 15) {
+    back = DLPC347X_C_CYAN;
+  } else if (id == 16) {
+    back = DLPC347X_C_MAGENTA;
+  } else if (id == 17) {
+    back = DLPC347X_C_YELLOW;
+  } else if (id == 18) {
+    back = DLPC347X_C_WHITE;
+  }
+}
+
 }

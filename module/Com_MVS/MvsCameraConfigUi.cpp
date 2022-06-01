@@ -11,8 +11,18 @@ namespace Eyestack::Com_MVS {
 MvsCameraConfigUi::MvsCameraConfigUi(QWidget* parent)
   : _S(parent)
   , _ui(new Ui::MvsCameraConfigUi())
+  , m_bOpenDevice(FALSE)
+  , m_bStartGrabbing(FALSE)
+  , m_nTriggerMode(MV_TRIGGER_MODE_OFF)
+  , m_dExposureEdit(0)
+  , m_bSoftWareTriggerCheck(FALSE)
+  , m_nTriggerSource(MV_TRIGGER_SOURCE_SOFTWARE)
+  , m_pSaveImageBuf(NULL)
+  , m_nSaveImageBufSize(0)
 {
   _ui->setupUi(this);
+  memset(&m_stImageInfo, 0, sizeof(MV_FRAME_OUT_INFO_EX));
+
   _ui->camlist->setModel(&_model);
 
   connect(_ui->configMonitor,
@@ -164,6 +174,11 @@ MvsCameraConfigUi::SetExposureTime()
   _chosen->SetEnumValue("ExposureMode", MV_EXPOSURE_MODE_TIMED);
   _chosen->SetEnumValue("ExposureAuto", MV_EXPOSURE_AUTO_MODE_OFF);
   _chosen->SetFloatValue("ExposureTime", (float)m_dExposureEdit);
+
+  QMessageBox MBox;
+  MBox.setWindowTitle("提示");
+  MBox.setText("设置曝光时间成功");
+  MBox.exec();
 }
 
 void
@@ -184,16 +199,17 @@ MvsCameraConfigUi::SetTriggerSource()
   if (m_bSoftWareTriggerCheck) {
     m_nTriggerSource = MV_TRIGGER_SOURCE_SOFTWARE;
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
+    _ui->SoftTriggerOnce->setEnabled(true);
     // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(TRUE);
   } else {
     m_nTriggerSource = MV_TRIGGER_SOURCE_LINE0;
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
-    // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(FALSE);
+    _ui->SoftTriggerOnce->setEnabled(false);
   }
 }
 
 void
-MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType)
+MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc)
 {
   MV_SAVE_IMG_TO_FILE_PARAM stSaveFileParam;
   memset(&stSaveFileParam, 0, sizeof(MV_SAVE_IMG_TO_FILE_PARAM));
@@ -201,28 +217,29 @@ MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType)
   EnterCriticalSection(&m_hSaveImageMux);
   if (m_pSaveImageBuf == NULL || m_stImageInfo.enPixelType == 0) {
     LeaveCriticalSection(&m_hSaveImageMux);
-    // TODOreturn MV_E_NODATA;
+    // TODO
+    return;
   }
 
-  //  if(RemoveCustomPixelFormats(m_stImageInfo.enPixelType))
-  //  {
-  //    LeaveCriticalSection(&m_hSaveImageMux);
-  //    return MV_E_SUPPORT;
-  //  }
+  if (RemoveCustomPixelFormats(m_stImageInfo.enPixelType)) {
+    LeaveCriticalSection(&m_hSaveImageMux);
+    return;
+    // MV_E_SUPPORT;
+  }
 
-  stSaveFileParam.enImageType =
-    enSaveImageType; // ch:需要保存的图像类型 | en:Image format to save
-  stSaveFileParam.enPixelType =
-    m_stImageInfo.enPixelType; // ch:相机对应的像素格式 | en:Camera pixel type
-  stSaveFileParam.nWidth = m_stImageInfo.nWidth; // ch:相机对应的宽 | en:Width
-  stSaveFileParam.nHeight =
-    m_stImageInfo.nHeight; // ch:相机对应的高 | en:Height
+  // ch:需要保存的图像类型
+  stSaveFileParam.enImageType = enSaveImageType;
+  // ch:相机对应的像素格式
+  stSaveFileParam.enPixelType = m_stImageInfo.enPixelType;
+  // ch:相机对应的宽
+  stSaveFileParam.nWidth = m_stImageInfo.nWidth;
+  // ch:相机对应的高
+  stSaveFileParam.nHeight = m_stImageInfo.nHeight;
   stSaveFileParam.nDataLen = m_stImageInfo.nFrameLen;
   stSaveFileParam.pData = m_pSaveImageBuf;
   stSaveFileParam.iMethodValue = 0;
 
-  // ch:jpg图像质量范围为(50-99], png图像质量范围为[0-9] | en:jpg image nQuality
-  // range is (50-99], png image nQuality range is [0-9]
+  // ch:jpg图像质量范围为(50-99], png图像质量范围为[0-9]
   if (MV_Image_Bmp == stSaveFileParam.enImageType) {
     sprintf_s(stSaveFileParam.pImagePath,
               256,
@@ -238,13 +255,6 @@ MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType)
               stSaveFileParam.nWidth,
               stSaveFileParam.nHeight,
               m_stImageInfo.nFrameNum);
-  } else if (MV_Image_Tif == stSaveFileParam.enImageType) {
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.tif",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
   } else if (MV_Image_Png == stSaveFileParam.enImageType) {
     stSaveFileParam.nQuality = 8;
     sprintf_s(stSaveFileParam.pImagePath,
@@ -256,6 +266,7 @@ MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType)
   }
 
   _chosen->SaveImageToFile(&stSaveFileParam);
+  _isSucc = true;
   LeaveCriticalSection(&m_hSaveImageMux);
 }
 
@@ -522,24 +533,26 @@ MvsCameraConfigUi::Model::setData(const QModelIndex& index,
 void
 MvsCameraConfigUi::on_ContinueButton_clicked()
 {
-  //  ((CButton *)GetDlgItem(IDC_CONTINUS_MODE_RADIO))->SetCheck(TRUE);
-  //  ((CButton *)GetDlgItem(IDC_TRIGGER_MODE_RADIO))->SetCheck(FALSE);
-  //  ((CButton *)GetDlgItem(IDC_SOFTWARE_TRIGGER_CHECK))->EnableWindow(FALSE);
+  _ui->ContinueButton->setChecked(true);
+  _ui->TriggerButton->setChecked(false);
+  _ui->SoftTrigger->setEnabled(false);
   m_nTriggerMode = MV_TRIGGER_MODE_OFF;
   SetTriggerMode();
-
-  // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON)->EnableWindow(FALSE);
+  _ui->SoftTriggerOnce->setEnabled(false);
 }
 
 void
 MvsCameraConfigUi::on_TriggerButton_clicked()
 {
   update();
+  _ui->ContinueButton->setChecked(false);
+  _ui->TriggerButton->setChecked(true);
+  _ui->SoftTrigger->setEnabled(true);
   m_nTriggerMode = MV_TRIGGER_MODE_ON;
   SetTriggerMode();
   if (m_bStartGrabbing == TRUE) {
     if (TRUE == m_bSoftWareTriggerCheck) {
-      // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(TRUE);
+      _ui->SoftTriggerOnce->setEnabled(true);
     }
   }
 }
@@ -563,13 +576,35 @@ MvsCameraConfigUi::on_SoftTriggerOnce_clicked()
 void
 MvsCameraConfigUi::on_SaveJPGButton_clicked()
 {
-  SaveImage(MV_Image_Jpeg);
+  bool succ = false;
+  QMessageBox MBox;
+  SaveImage(MV_Image_Jpeg, succ);
+  if (succ) {
+    MBox.setWindowTitle("提示");
+    MBox.setText("保存JPG成功");
+    MBox.exec();
+  } else {
+    MBox.setWindowTitle("提示");
+    MBox.setText("保存JPG失败");
+    MBox.exec();
+  }
 }
 
 void
 MvsCameraConfigUi::on_SaveBMPButton_clicked()
 {
-  SaveImage(MV_Image_Bmp);
+  bool succ = false;
+  QMessageBox MBox;
+  SaveImage(MV_Image_Bmp, succ);
+  if (succ) {
+    MBox.setWindowTitle("提示");
+    MBox.setText("保存BMP成功");
+    MBox.exec();
+  } else {
+    MBox.setWindowTitle("提示");
+    MBox.setText("保存BMP失败");
+    MBox.exec();
+  }
 }
 
 void
@@ -586,5 +621,16 @@ MvsCameraConfigUi::on_GetExposureTime_clicked()
   GetTriggerMode();
   GetExposureTime();
   _ui->ExposureTime->setText(QString::number(m_dExposureEdit, 'f', 10));
+}
+
+bool
+MvsCameraConfigUi::RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat)
+{
+  int nResult = enPixelFormat & MV_GVSP_PIX_CUSTOM;
+  if (MV_GVSP_PIX_CUSTOM == nResult) {
+    return true;
+  } else {
+    return false;
+  }
 }
 }

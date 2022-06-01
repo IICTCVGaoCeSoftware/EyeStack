@@ -40,7 +40,7 @@
 #include "Eyestack/Com_DLP/dlpc347x_samples.hpp"
 #include <iostream>
 
-static QVector<DLPC347X_INT_PAT_PatternSet_s> VPatternSet;
+static QVector<DLPC347X_INT_PAT_PatternSet_s> VPatternSet(4);
 static QVector<DLPC347X_INT_PAT_PatternData_s> V1bitPatternData;
 static QVector<DLPC347X_INT_PAT_PatternData_s> H1bitPatternData;
 static QVector<DLPC347X_INT_PAT_PatternData_s> H8bitPatternData;
@@ -654,4 +654,54 @@ MergeV8PatternData(uint8_t seq)
   }
   VPatternSet[seq].PatternArray = &PatternData[pos];
   VPatternSet[seq].PatternCount = pos;
+}
+
+void
+WriteTestPatternChessBoard()
+{
+  /* Write Input Image Size */
+  DLPC347X_WriteInputImageSize(DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  /* Write Image Crop */
+  DLPC347X_WriteImageCrop(0, 0, DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  /* Write Display Size */
+  DLPC347X_WriteDisplaySize(0, 0, DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  /* Write Grid Lines */
+  DLPC347X_Checkerboard_s GridLines;
+  GridLines.Border = DLPC347X_BE_ENABLE;
+  GridLines.BackgroundColor = DLPC347X_C_BLUE;
+  GridLines.ForegroundColor = DLPC347X_C_RED;
+  GridLines.HorizontalCheckerCount = 20;
+  GridLines.VerticalCheckerCount = 10;
+  DLPC347X_WriteCheckerboard(&GridLines);
+  DLPC347X_WriteOperatingModeSelect(DLPC347X_OM_TEST_PATTERN_GENERATOR);
+  WaitForSeconds(5);
+}
+
+void
+SetChessboardConfig(DLPC347X_Color_e fore,
+                    DLPC347X_Color_e back,
+                    unsigned short h,
+                    unsigned short v)
+{
+  /* Write Input Image Size */
+  DLPC347X_WriteInputImageSize(DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  /* Write Image Crop */
+  DLPC347X_WriteImageCrop(0, 0, DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  /* Write Display Size */
+  DLPC347X_WriteDisplaySize(0, 0, DLP3010_WIDTH, DLP3010_HEIGHT);
+
+  DLPC347X_Checkerboard_s GridLines;
+  GridLines.Border = DLPC347X_BE_ENABLE;
+  GridLines.BackgroundColor = fore;
+  GridLines.ForegroundColor = back;
+  GridLines.HorizontalCheckerCount = h;
+  GridLines.VerticalCheckerCount = v;
+  DLPC347X_WriteCheckerboard(&GridLines);
+  DLPC347X_WriteOperatingModeSelect(DLPC347X_OM_TEST_PATTERN_GENERATOR);
+  WaitForSeconds(5);
 }

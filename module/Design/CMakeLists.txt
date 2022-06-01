@@ -31,6 +31,7 @@ target_include_directories(Design
     $<INSTALL_INTERFACE:inc>
 )
 
+
 target_link_libraries(Design PUBLIC Asset)
 
 target_compile_definitions(Design
@@ -38,7 +39,10 @@ target_compile_definitions(Design
   PRIVATE EYESTACK_DESIGN_EXPORT=Q_DECL_EXPORT
 )
 
+
+
 target_precompile_headers(Design REUSE_FROM pch)
+
 
 # 部署规则
 install(TARGETS Design EXPORT ${EXPORT_TARGETS})

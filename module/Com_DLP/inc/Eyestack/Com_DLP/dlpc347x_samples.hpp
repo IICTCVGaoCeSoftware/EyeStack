@@ -139,3 +139,11 @@ void
 MergeH8PatternData(uint8_t seq);
 void
 MergeV8PatternData(uint8_t seq);
+void
+WriteTestPatternChessBoard();
+
+void
+SetChessboardConfig(DLPC347X_Color_e fore,
+                    DLPC347X_Color_e back,
+                    unsigned short h,
+                    unsigned short v);
