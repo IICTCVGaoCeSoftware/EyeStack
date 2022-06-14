@@ -23,9 +23,9 @@ QuadrangleSelector::reset_thumbtacks()
 {
   auto rect = _imageItem.get_image().rect();
   _thumbtacks[0].setPos(rect.topLeft());
-  _thumbtacks[1].setPos(rect.topRight());
-  _thumbtacks[2].setPos(rect.bottomLeft());
-  _thumbtacks[3].setPos(rect.bottomRight());
+  _thumbtacks[1].setPos(rect.bottomLeft());
+  _thumbtacks[2].setPos(rect.bottomRight());
+  _thumbtacks[3].setPos(rect.topRight());
 }
 
 cv::Vec<cv::Point2f, 4>

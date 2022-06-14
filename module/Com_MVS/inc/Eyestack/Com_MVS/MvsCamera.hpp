@@ -99,7 +99,7 @@ signals:
    *
    * @param frame 获取的图像帧
    */
-  void s_refresh(::cv::Mat frame, QPrivateSignal = QPrivateSignal());
+  void s_refresh(::cv::Mat frame);
 
   void u_camera(::Eyestack::Com_MVS::MvsCameraWrapper::Shared camera);
 

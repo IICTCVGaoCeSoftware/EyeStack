@@ -67,5 +67,11 @@
         <file>icon/fa/table-cells-solid.svg</file>
         <file>icon/fa/tv-solid.svg</file>
         <file>icon/fa/check-solid.svg</file>
+        <file>icon/fa/minus-circle-solid.svg</file>
+        <file>icon/fa/plus-square-regular.svg</file>
+        <file>icon/fa/download-solid.svg</file>
+        <file>icon/fa/arrow-circle-right-solid.svg</file>
+        <file>icon/fa/grip-horizontal-solid.svg</file>
+        <file>icon/fa/grip-lines-vertical-solid.svg</file>
     </qresource>
 </RCC>

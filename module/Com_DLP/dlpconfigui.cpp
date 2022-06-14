@@ -51,10 +51,6 @@ DLPConfigUi::setupUi()
     3, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-horizontal-solid.svg"));
   _ui->_selectPatternSet->setItemIcon(
     4, QIcon("D:/ICAC/DLPC-API-1.1/Asset/grip-lines-vertical-solid.svg"));
-  _ui->ProgramButton->setIcon(
-    QIcon("D:/ICAC/DLPC-API-1.1/Asset/download-solid.svg"));
-  _ui->ImageButton->setIcon(
-    QIcon("D:/ICAC/DLPC-API-1.1/Asset/image-solid.svg"));
   _ui->ConfigTable->verticalHeader()->setVisible(true);
   _ui->ConfigTable->setEditTriggers(QAbstractItemView::DoubleClicked);
   _ui->PatternSet->setEditTriggers(QAbstractItemView::NoEditTriggers);
