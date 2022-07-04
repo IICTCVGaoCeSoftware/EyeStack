@@ -9,10 +9,15 @@ namespace Eyestack::Design {
 QuadrangleSelector::QuadrangleSelector(bool scattered, QWidget* parent)
   : _S(parent)
   , _borderItem(&_imageItem)
+  , _outBorderItem(&_imageItem)
   , _thumbtacks{ { *this, -20, -20, Qt::red, &_imageItem },
                  { *this, 20, -20, Qt::green, &_imageItem },
                  { *this, -20, 20, Qt::blue, &_imageItem },
                  { *this, 20, 20, Qt::yellow, &_imageItem } }
+  , _outThumbtacks{ { *this, -20, -20, Qt::red, &_imageItem },
+                    { *this, 20, -20, Qt::green, &_imageItem },
+                    { *this, -20, 20, Qt::blue, &_imageItem },
+                    { *this, 20, 20, Qt::yellow, &_imageItem } }
   , _scattered(scattered)
 {
   _borderItem.setPen(QPen(Qt::cyan));
@@ -60,6 +65,14 @@ QuadrangleSelector::update_lines()
   path.lineTo(_thumbtacks[2].pos());
   path.closeSubpath();
   _borderItem.setPath(std::move(path));
+
+  QPainterPath path1;
+  path1.moveTo(_outThumbtacks[0].pos());
+  path1.lineTo(_outThumbtacks[1].pos());
+  path1.lineTo(_outThumbtacks[3].pos());
+  path1.lineTo(_outThumbtacks[2].pos());
+  path1.closeSubpath();
+  _outBorderItem.setPath(std::move(path1));
 }
 
 // ==========================================================================

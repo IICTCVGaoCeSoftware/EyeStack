@@ -209,9 +209,9 @@ private slots:
   void on_SoftTriggerOnce_clicked();
 
   // 保存图片按钮
-  void on_SaveJPGButton_clicked();
   void on_SaveBMPButton_clicked();
   void on_SetExposureTime_clicked();
   void on_GetExposureTime_clicked();
+  void on_SavePNGButton_clicked();
 };
 }

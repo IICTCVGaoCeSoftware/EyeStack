@@ -157,9 +157,9 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QPushButton" name="SaveJPGButton">
+          <widget class="QPushButton" name="SavePNGButton">
            <property name="text">
-            <string>保存JPG</string>
+            <string>保存PNG</string>
            </property>
           </widget>
          </item>

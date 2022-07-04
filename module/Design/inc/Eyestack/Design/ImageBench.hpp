@@ -237,6 +237,7 @@ public:
 protected:
   Scene _scene;
   ImageItem _imageItem; // 必须声明在 _scene 之后，否则会重复析构
+  ImageItem _imageItem1;
 
   // ImageBenchBase interface
 protected:

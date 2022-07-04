@@ -25,10 +25,10 @@ add_compile_definitions(
   QT_DISABLE_DEPRECATED_BEFORE=0x050f00
 )
 
-
-
 # OpenCV
 find_package(OpenCV REQUIRED)
 
 # PCL 1.10
 find_package(PCL 1.10 REQUIRED)
+find_package(VTK REQUIRED)
+find_package(Boost REQUIRED)

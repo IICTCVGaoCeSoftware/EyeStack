@@ -574,28 +574,11 @@ MvsCameraConfigUi::on_SoftTriggerOnce_clicked()
 }
 
 void
-MvsCameraConfigUi::on_SaveJPGButton_clicked()
-{
-  bool succ = false;
-  QMessageBox MBox;
-  SaveImage(MV_Image_Jpeg, succ);
-  if (succ) {
-    MBox.setWindowTitle("提示");
-    MBox.setText("保存JPG成功");
-    MBox.exec();
-  } else {
-    MBox.setWindowTitle("提示");
-    MBox.setText("保存JPG失败");
-    MBox.exec();
-  }
-}
-
-void
 MvsCameraConfigUi::on_SaveBMPButton_clicked()
 {
   bool succ = false;
   QMessageBox MBox;
-  SaveImage(MV_Image_Bmp, succ);
+  // cv::imwrite() SaveImage(MV_Image_Bmp, succ);
   if (succ) {
     MBox.setWindowTitle("提示");
     MBox.setText("保存BMP成功");
@@ -633,4 +616,28 @@ MvsCameraConfigUi::RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat)
     return false;
   }
 }
+
+void
+MvsCameraConfigUi::on_SavePNGButton_clicked()
+{
+  try {
+    auto& w = _wrappers[_selected.row()];
+    auto image = w._camera->snap_cvmat(100, true);
+    QString filename = QFileDialog::getSaveFileName(this, "保存PNG", "*.png");
+    QFile file(filename);
+    std::vector<int> compression_params;
+    compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(0);
+    compression_params.push_back(cv::IMWRITE_PNG_STRATEGY);
+    compression_params.push_back(cv::IMWRITE_PNG_STRATEGY_DEFAULT);
+    cv::imwrite(filename.toStdString(), image, compression_params);
+
+  } catch (const MvsError& e) {
+    QMessageBox MBox;
+    MBox.setWindowTitle("提示");
+    MBox.setText("保存PNG失败");
+    MBox.exec();
+  }
+}
+
 }

@@ -10,6 +10,7 @@ add_library(pch
 )
 
 target_link_libraries(pch PUBLIC Qt5::Widgets opencv_world)
+target_link_libraries(pch PUBLIC ${PCL_LIBRARIES} ${VTK_LIBRARIES})
 
 target_include_directories(pch
   PUBLIC

@@ -121,7 +121,10 @@ private:
 
 private:
   QGraphicsPathItem _borderItem; // 边框线
-  ThumbtackItem _thumbtacks[4]; // 顺序：↖↗↙↘
+  QGraphicsPathItem _outBorderItem; // 边框线
+  ThumbtackItem _thumbtacks[4];     // 顺序：↖↗↙↘
+  ThumbtackItem _outThumbtacks[4];
+
   bool _scattered;
 
 private:
