@@ -165,9 +165,6 @@ private:
   void GetTriggerSource();
   void SetTriggerSource();
 
-  // 保存图片
-  void SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc);
-
   // 自定义格式不支持显示
   bool RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat);
 
@@ -210,8 +207,9 @@ private slots:
 
   // 保存图片按钮
   void on_SaveBMPButton_clicked();
+  void on_SavePNGButton_clicked();
+
   void on_SetExposureTime_clicked();
   void on_GetExposureTime_clicked();
-  void on_SavePNGButton_clicked();
 };
 }

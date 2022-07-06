@@ -3,9 +3,8 @@
 #
 configure_file(ExportConfig.cmake.in EyestackConfig.cmake)
 
+# 导出Eyestack目标库，命名空间为Eyestack::
 export(EXPORT ${EXPORT_TARGETS} NAMESPACE Eyestack::)
-
-
 
 #
 # 打包部署使用方式
@@ -13,6 +12,7 @@ export(EXPORT ${EXPORT_TARGETS} NAMESPACE Eyestack::)
 include(CPack)
 include(CMakePackageConfigHelpers)
 
+# 为上层应用提供配置框架功能
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/InstallConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/install/${PROJECT_NAME}Config.cmake
@@ -29,6 +29,7 @@ install(EXPORT ${EXPORT_TARGETS}
   NAMESPACE Eyestack::
 )
 
+# 部署依赖文件
 install(FILES
   deps.cmake InstallHelpers.cmake DeployQt.cmake TargetIspcSources.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/install/${PROJECT_NAME}Config.cmake

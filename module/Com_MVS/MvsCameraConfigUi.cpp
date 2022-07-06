@@ -141,21 +141,28 @@ MvsCameraConfigUi::update_selected()
 void
 MvsCameraConfigUi::SetTriggerMode()
 {
-  _chosen->SetEnumValue("TriggerMode", m_nTriggerMode);
+  try {
+    _chosen->SetEnumValue("TriggerMode", m_nTriggerMode);
+  } catch (const MvsError& e) {
+    QMessageBox::critical(this, tr("设置触发模式出错"), e.repr());
+  }
 }
 
 void
 MvsCameraConfigUi::GetTriggerMode()
 {
   MVCC_ENUMVALUE stEnumValue = { 0 };
-
-  _chosen->GetEnumValue("TriggerMode", &stEnumValue);
-  m_nTriggerMode = stEnumValue.nCurValue;
-  if (MV_TRIGGER_MODE_ON == m_nTriggerMode) {
-    on_TriggerButton_clicked();
-  } else {
-    m_nTriggerMode = MV_TRIGGER_MODE_OFF;
-    on_ContinueButton_clicked();
+  try {
+    _chosen->GetEnumValue("TriggerMode", &stEnumValue);
+    m_nTriggerMode = stEnumValue.nCurValue;
+    if (MV_TRIGGER_MODE_ON == m_nTriggerMode) {
+      on_TriggerButton_clicked();
+    } else {
+      m_nTriggerMode = MV_TRIGGER_MODE_OFF;
+      on_ContinueButton_clicked();
+    }
+  } catch (const MvsError& e) {
+    QMessageBox::critical(this, tr("获取触发模式出错"), e.repr());
   }
 }
 
@@ -184,12 +191,16 @@ MvsCameraConfigUi::SetExposureTime()
 void
 MvsCameraConfigUi::GetTriggerSource()
 {
-  MVCC_ENUMVALUE stEnumValue = { 0 };
-  _chosen->GetEnumValue("TriggerSource", &stEnumValue);
-  if ((unsigned int)MV_TRIGGER_SOURCE_SOFTWARE == stEnumValue.nCurValue) {
-    m_bSoftWareTriggerCheck = TRUE;
-  } else {
-    m_bSoftWareTriggerCheck = FALSE;
+  try {
+    MVCC_ENUMVALUE stEnumValue = { 0 };
+    _chosen->GetEnumValue("TriggerSource", &stEnumValue);
+    if ((unsigned int)MV_TRIGGER_SOURCE_SOFTWARE == stEnumValue.nCurValue) {
+      m_bSoftWareTriggerCheck = TRUE;
+    } else {
+      m_bSoftWareTriggerCheck = FALSE;
+    }
+  } catch (const MvsError& e) {
+    QMessageBox::critical(this, tr("获取触发模式出错"), e.repr());
   }
 }
 
@@ -206,68 +217,6 @@ MvsCameraConfigUi::SetTriggerSource()
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
     _ui->SoftTriggerOnce->setEnabled(false);
   }
-}
-
-void
-MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc)
-{
-  MV_SAVE_IMG_TO_FILE_PARAM stSaveFileParam;
-  memset(&stSaveFileParam, 0, sizeof(MV_SAVE_IMG_TO_FILE_PARAM));
-
-  EnterCriticalSection(&m_hSaveImageMux);
-  if (m_pSaveImageBuf == NULL || m_stImageInfo.enPixelType == 0) {
-    LeaveCriticalSection(&m_hSaveImageMux);
-    // TODO
-    return;
-  }
-
-  if (RemoveCustomPixelFormats(m_stImageInfo.enPixelType)) {
-    LeaveCriticalSection(&m_hSaveImageMux);
-    return;
-    // MV_E_SUPPORT;
-  }
-
-  // ch:需要保存的图像类型
-  stSaveFileParam.enImageType = enSaveImageType;
-  // ch:相机对应的像素格式
-  stSaveFileParam.enPixelType = m_stImageInfo.enPixelType;
-  // ch:相机对应的宽
-  stSaveFileParam.nWidth = m_stImageInfo.nWidth;
-  // ch:相机对应的高
-  stSaveFileParam.nHeight = m_stImageInfo.nHeight;
-  stSaveFileParam.nDataLen = m_stImageInfo.nFrameLen;
-  stSaveFileParam.pData = m_pSaveImageBuf;
-  stSaveFileParam.iMethodValue = 0;
-
-  // ch:jpg图像质量范围为(50-99], png图像质量范围为[0-9]
-  if (MV_Image_Bmp == stSaveFileParam.enImageType) {
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.bmp",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  } else if (MV_Image_Jpeg == stSaveFileParam.enImageType) {
-    stSaveFileParam.nQuality = 80;
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.jpg",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  } else if (MV_Image_Png == stSaveFileParam.enImageType) {
-    stSaveFileParam.nQuality = 8;
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.png",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  }
-
-  _chosen->SaveImageToFile(&stSaveFileParam);
-  _isSucc = true;
-  LeaveCriticalSection(&m_hSaveImageMux);
 }
 
 void
