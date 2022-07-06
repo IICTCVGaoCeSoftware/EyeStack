@@ -5,7 +5,7 @@ if(NOT _env_cmake_found)
   include(env.cmake.example OPTIONAL)
 endif()
 
-project(Eyestack VERSION 3.0.0.0)
+project(Eyestack VERSION 2.0.0.0)
 
 include(cmake/deps.cmake)
 

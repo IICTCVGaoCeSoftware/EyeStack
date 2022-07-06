@@ -12,8 +12,3 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/InstallHelpers.cmake")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../module/Com_MVS/official"
   "${CMAKE_CURRENT_BINARY_DIR}/../module/Com_MVS/official"
 )
-
-# 使用 Com_DLP 模块所需的代码
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../module/Com_DLP/official"
-  "${CMAKE_CURRENT_BINARY_DIR}/../module/Com_DLP/official"
-)

@@ -16,8 +16,5 @@ add_subdirectory(Framework)
 # 通用组件
 add_subdirectory(Gencom)
 
-# 德州仪器 DLP 投影仪组件
-add_subdirectory(Com_DLP)
-
 # 海康威视 MVS 相机驱动组件
 add_subdirectory(Com_MVS)
