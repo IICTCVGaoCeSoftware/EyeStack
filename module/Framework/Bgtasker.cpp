@@ -74,6 +74,7 @@ Bgtasker::when_post(::std::function<void(TaskEntry&)> func,
                     int maximum,
                     bool cancelable)
 {
+  // 返回Qt应用程序全局线程池实例
   auto& pool = *QThreadPool::globalInstance();
   auto taskEntry = new TaskEntry(title, minimum, maximum, cancelable);
   pool.start([taskEntry, func, title]() {

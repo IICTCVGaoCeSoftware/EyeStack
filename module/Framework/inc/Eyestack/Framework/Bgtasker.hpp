@@ -8,7 +8,7 @@ namespace Eyestack::Framework {
 /**
  * @brief 线程安全的任务条目类
  */
-class EYESTACK_FRAMEWORK_EXPORT TaskEntry : private QWidget
+class EYESTACK_FRAMEWORK_EXPORT TaskEntry : public QWidget
 {
   Q_OBJECT
   friend class QObject;

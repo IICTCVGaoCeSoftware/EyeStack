@@ -211,7 +211,6 @@ MvsCameraConfigUi::SetTriggerSource()
     m_nTriggerSource = MV_TRIGGER_SOURCE_SOFTWARE;
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
     _ui->SoftTriggerOnce->setEnabled(true);
-    // GetDlgItem(IDC_SOFTWARE_ONCE_BUTTON )->EnableWindow(TRUE);
   } else {
     m_nTriggerSource = MV_TRIGGER_SOURCE_LINE0;
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
