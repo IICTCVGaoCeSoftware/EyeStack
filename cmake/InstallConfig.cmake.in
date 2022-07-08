@@ -15,6 +15,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../module/Com_MVS/official"
   "${CMAKE_CURRENT_LIST_DIR}/../module/Com_MVS/official/build"
 )
 
+# 使用 Com_DLP 模块所需的代码
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../module/Com_DLP/official"
   "${CMAKE_CURRENT_LIST_DIR}/../module/Com_DLP/official/build"
 )
