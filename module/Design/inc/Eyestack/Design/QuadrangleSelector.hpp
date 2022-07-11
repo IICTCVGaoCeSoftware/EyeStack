@@ -71,6 +71,12 @@ public:
   cv::Vec<cv::Point2f, 4> get_quadrangle();
 
   /**
+   * @brief 获取外部四边形的各点坐标
+   * @return
+   */
+  cv::Vec<cv::Point2f, 4> get_outQuadrangle();
+
+  /**
    * @brief 以 OpenCV 格式设置当前四边形
    * @param points 至少 4 行 2 列的 CV_32FC1 类型数组，顺序：↖↗↙↘
    */

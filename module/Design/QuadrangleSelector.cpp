@@ -21,6 +21,7 @@ QuadrangleSelector::QuadrangleSelector(bool scattered, QWidget* parent)
   , _scattered(scattered)
 {
   _borderItem.setPen(QPen(Qt::cyan));
+  _outBorderItem.setPen(QPen(Qt::darkCyan));
 }
 
 void
@@ -45,6 +46,17 @@ QuadrangleSelector::get_quadrangle()
   return retval;
 }
 
+cv::Vec<cv::Point2f, 4>
+QuadrangleSelector::get_outQuadrangle()
+{
+  cv::Vec<cv::Point2f, 4> retval;
+  for (auto i = 0; i < 4; ++i) {
+    auto point = _outThumbtacks[i].pos();
+    retval[i].x = point.x();
+    retval[i].y = point.y();
+  }
+  return retval;
+}
 void
 QuadrangleSelector::set_quadrangle(cv::InputArray points)
 {
