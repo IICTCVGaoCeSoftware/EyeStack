@@ -97,10 +97,6 @@ public:
   void SetFloatValue(const char* strKey, float fValue);
   // ch:执行一次Command型命令
   void CommandExecute(const char* strKey);
-  // ch:保存图片 | en:save image
-  void SaveImage(MV_SAVE_IMAGE_PARAM_EX* pstParam);
-  // ch:保存图片为文件 | en:Save the image as a file
-  void SaveImageToFile(MV_SAVE_IMG_TO_FILE_PARAM* pstSaveFileParam);
 
   //  /**
   //   * @threadsafe

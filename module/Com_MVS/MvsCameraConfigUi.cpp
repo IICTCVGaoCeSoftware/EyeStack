@@ -17,8 +17,6 @@ MvsCameraConfigUi::MvsCameraConfigUi(QWidget* parent)
   , m_dExposureEdit(0)
   , m_bSoftWareTriggerCheck(FALSE)
   , m_nTriggerSource(MV_TRIGGER_SOURCE_SOFTWARE)
-  , m_pSaveImageBuf(NULL)
-  , m_nSaveImageBufSize(0)
 {
   _ui->setupUi(this);
   memset(&m_stImageInfo, 0, sizeof(MV_FRAME_OUT_INFO_EX));
@@ -39,6 +37,9 @@ MvsCameraConfigUi::MvsCameraConfigUi(QWidget* parent)
   connect(&_timer, &QTimer::timeout, this, &_T::when_timer_timeout);
 
   connect(_ui->timeoutSpinBox, &QSpinBox::valueChanged, this, &_T::u_timeout);
+
+  connect(
+    _ui->SoftTrigger, &QCheckBox::stateChanged, this, &_T::SetTriggerSource);
 
   // 初始化状态
   update_chosen();
@@ -196,7 +197,7 @@ MvsCameraConfigUi::GetTriggerSource()
 void
 MvsCameraConfigUi::SetTriggerSource()
 {
-  if (m_bSoftWareTriggerCheck) {
+  if (_ui->SoftTrigger->isChecked()) {
     m_nTriggerSource = MV_TRIGGER_SOURCE_SOFTWARE;
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
     _ui->SoftTriggerOnce->setEnabled(true);
@@ -206,68 +207,6 @@ MvsCameraConfigUi::SetTriggerSource()
     _chosen->SetEnumValue("TriggerSource", m_nTriggerSource);
     _ui->SoftTriggerOnce->setEnabled(false);
   }
-}
-
-void
-MvsCameraConfigUi::SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc)
-{
-  MV_SAVE_IMG_TO_FILE_PARAM stSaveFileParam;
-  memset(&stSaveFileParam, 0, sizeof(MV_SAVE_IMG_TO_FILE_PARAM));
-
-  EnterCriticalSection(&m_hSaveImageMux);
-  if (m_pSaveImageBuf == NULL || m_stImageInfo.enPixelType == 0) {
-    LeaveCriticalSection(&m_hSaveImageMux);
-    // TODO
-    return;
-  }
-
-  if (RemoveCustomPixelFormats(m_stImageInfo.enPixelType)) {
-    LeaveCriticalSection(&m_hSaveImageMux);
-    return;
-    // MV_E_SUPPORT;
-  }
-
-  // ch:需要保存的图像类型
-  stSaveFileParam.enImageType = enSaveImageType;
-  // ch:相机对应的像素格式
-  stSaveFileParam.enPixelType = m_stImageInfo.enPixelType;
-  // ch:相机对应的宽
-  stSaveFileParam.nWidth = m_stImageInfo.nWidth;
-  // ch:相机对应的高
-  stSaveFileParam.nHeight = m_stImageInfo.nHeight;
-  stSaveFileParam.nDataLen = m_stImageInfo.nFrameLen;
-  stSaveFileParam.pData = m_pSaveImageBuf;
-  stSaveFileParam.iMethodValue = 0;
-
-  // ch:jpg图像质量范围为(50-99], png图像质量范围为[0-9]
-  if (MV_Image_Bmp == stSaveFileParam.enImageType) {
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.bmp",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  } else if (MV_Image_Jpeg == stSaveFileParam.enImageType) {
-    stSaveFileParam.nQuality = 80;
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.jpg",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  } else if (MV_Image_Png == stSaveFileParam.enImageType) {
-    stSaveFileParam.nQuality = 8;
-    sprintf_s(stSaveFileParam.pImagePath,
-              256,
-              "Image_w%d_h%d_fn%03d.png",
-              stSaveFileParam.nWidth,
-              stSaveFileParam.nHeight,
-              m_stImageInfo.nFrameNum);
-  }
-
-  _chosen->SaveImageToFile(&stSaveFileParam);
-  _isSucc = true;
-  LeaveCriticalSection(&m_hSaveImageMux);
 }
 
 void
@@ -544,32 +483,20 @@ MvsCameraConfigUi::on_ContinueButton_clicked()
 void
 MvsCameraConfigUi::on_TriggerButton_clicked()
 {
-  update();
   _ui->ContinueButton->setChecked(false);
   _ui->TriggerButton->setChecked(true);
   _ui->SoftTrigger->setEnabled(true);
   m_nTriggerMode = MV_TRIGGER_MODE_ON;
   SetTriggerMode();
-  if (m_bStartGrabbing == TRUE) {
-    if (TRUE == m_bSoftWareTriggerCheck) {
-      _ui->SoftTriggerOnce->setEnabled(true);
-    }
+  if (_ui->SoftTrigger->checkState() == Qt::Checked) {
+    _ui->SoftTriggerOnce->setEnabled(true);
   }
-}
-
-void
-MvsCameraConfigUi::on_SoftTrigger_clicked()
-{
-  update();
-  SetTriggerSource();
 }
 
 void
 MvsCameraConfigUi::on_SoftTriggerOnce_clicked()
 {
-  if (TRUE != m_bStartGrabbing) {
-    return;
-  }
+  m_bStartGrabbing = true;
   _chosen->CommandExecute("TriggerSoftware");
 }
 
@@ -637,6 +564,143 @@ MvsCameraConfigUi::on_SavePNGButton_clicked()
     MBox.setWindowTitle("提示");
     MBox.setText("保存PNG失败");
     MBox.exec();
+  }
+}
+
+void
+MvsCameraConfigUi::on_m_ctrlGetLineselButton_clicked()
+{
+  QString strMsg;
+  MVCC_ENUMVALUE stSelector;
+
+  _chosen->GetEnumValue("LineSelector", &stSelector);
+
+  _ui->m_ctrlLineSelectCombo->clear();
+
+  for (unsigned int i = 0; i < stSelector.nSupportedNum; i++) {
+    strMsg = QString("Line%1").arg(stSelector.nSupportValue[i]);
+    _ui->m_ctrlLineSelectCombo->addItem(strMsg);
+  }
+  m_nLineSelectorCombo = stSelector.nCurValue;
+}
+
+void
+MvsCameraConfigUi::on_m_ctrlSetLinesetButton_clicked()
+{
+  if (m_nLineSelectorCombo < 0) {
+    QMessageBox MBox;
+    MBox.setWindowTitle("提示");
+    MBox.setText("无法选择线路");
+    MBox.exec();
+    return;
+  }
+
+  unsigned int nValue = 0;
+  QString str;
+  str = _ui->m_ctrlLineSelectCombo->currentText();
+  if (str == "Line0") {
+    nValue = 0;
+  } else if (str == "Line1") {
+    nValue = 1;
+  } else if (str == ("Line2")) {
+    nValue = 2;
+  } else if (str == "Line3") {
+    nValue = 3;
+  } else if (str == "Line4") {
+    nValue = 4;
+  } else {
+    QMessageBox MBox;
+    MBox.setWindowTitle("提示");
+    MBox.setText("无可用线路");
+    MBox.exec();
+    return;
+  }
+
+  _chosen->SetEnumValue("LineSelector", nValue);
+  QMessageBox MBox;
+  MBox.setWindowTitle("提示");
+  MBox.setText("设置线路成功");
+  MBox.exec();
+}
+
+void
+MvsCameraConfigUi::on_m_ctrlGetLinemodeButton_clicked()
+{
+  QString strMsg;
+  MVCC_ENUMVALUE stSelector;
+
+  _chosen->GetEnumValue("LineMode", &stSelector);
+
+  _ui->m_ctrlLinemodeCombo->clear();
+  m_nLinemodeCombo = 0;
+
+  for (unsigned int i = 0; i < stSelector.nSupportedNum; i++) {
+    if (0 == stSelector.nSupportValue[i]) {
+      strMsg = "Input";
+      _ui->m_ctrlLinemodeCombo->addItem(strMsg);
+    }
+    if (1 == stSelector.nSupportValue[i]) {
+      strMsg = "Output";
+      _ui->m_ctrlLinemodeCombo->addItem(strMsg);
+    }
+    if (2 == stSelector.nSupportValue[i]) {
+      strMsg = "Trigger";
+      _ui->m_ctrlLinemodeCombo->addItem(strMsg);
+    }
+    if (8 == stSelector.nSupportValue[i]) {
+      strMsg = "Strobe";
+      _ui->m_ctrlLinemodeCombo->addItem(strMsg);
+    }
+
+    if (stSelector.nSupportValue[i] == stSelector.nCurValue) {
+      m_nLinemodeCombo = i;
+    }
+  }
+}
+
+void
+MvsCameraConfigUi::on_m_ctrlSetLinemodeButton_clicked()
+{
+  if (m_nLineSelectorCombo < 0) {
+    QMessageBox MBox;
+    MBox.setWindowTitle("提示");
+    MBox.setText("请选择模式");
+    MBox.exec();
+    return;
+  }
+
+  unsigned int nValue = 0;
+  QString str;
+  str = _ui->m_ctrlLinemodeCombo->currentText();
+  if (str == "Input") {
+    nValue = 0;
+  } else if (str == "Output") {
+    nValue = 1;
+  } else if (str == "Trigger") {
+    nValue = 2;
+  } else if (str == "Strobe") {
+    nValue = 8;
+  } else {
+    QMessageBox MBox;
+    MBox.setWindowTitle("提示");
+    MBox.setText("选择模式失败");
+    MBox.exec();
+    return;
+  }
+
+  _chosen->SetEnumValue("LineMode", nValue);
+  QMessageBox MBox;
+  MBox.setWindowTitle("提示");
+  MBox.setText("选择线路成功");
+  MBox.exec();
+}
+
+void
+MvsCameraConfigUi::on_SoftTrigger_stateChanged(int arg1)
+{
+  if (arg1 == Qt::Checked) {
+    SetTriggerSource();
+    _ui->SoftTriggerOnce->setCheckable(true);
   }
 }
 

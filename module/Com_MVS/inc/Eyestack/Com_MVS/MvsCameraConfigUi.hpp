@@ -139,9 +139,8 @@ private:
   BOOL m_bStartGrabbing; // ch:是否开始抓图 | en:Whether to start grabbing
   int m_nTriggerMode;    // ch:触发模式 | en:Trigger Mode
   int m_nTriggerSource;  // ch:触发源 | en:Trigger Source
-  CRITICAL_SECTION m_hSaveImageMux;
-  unsigned char* m_pSaveImageBuf;
-  unsigned int m_nSaveImageBufSize;
+  int m_nLineSelectorCombo;
+  int m_nLinemodeCombo;
   MV_FRAME_OUT_INFO_EX m_stImageInfo;
   double m_dExposureEdit;
   BOOL m_bSoftWareTriggerCheck;
@@ -164,9 +163,6 @@ private:
   // 获取和设置触发源
   void GetTriggerSource();
   void SetTriggerSource();
-
-  // 保存图片
-  void SaveImage(MV_SAVE_IAMGE_TYPE enSaveImageType, bool& _isSucc);
 
   // 自定义格式不支持显示
   bool RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat);
@@ -205,7 +201,6 @@ private slots:
   void on_TriggerButton_clicked();
 
   // 软触发设置
-  void on_SoftTrigger_clicked();
   void on_SoftTriggerOnce_clicked();
 
   // 保存图片按钮
@@ -213,5 +208,10 @@ private slots:
   void on_SetExposureTime_clicked();
   void on_GetExposureTime_clicked();
   void on_SavePNGButton_clicked();
+  void on_m_ctrlGetLineselButton_clicked();
+  void on_m_ctrlSetLinesetButton_clicked();
+  void on_m_ctrlGetLinemodeButton_clicked();
+  void on_m_ctrlSetLinemodeButton_clicked();
+  void on_SoftTrigger_stateChanged(int arg1);
 };
 }

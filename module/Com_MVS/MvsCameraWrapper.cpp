@@ -314,18 +314,6 @@ MvsCameraWrapper::CommandExecute(const char* strKey)
   ensure(MV_CC_SetCommandValue(_handle, strKey));
 }
 
-void
-MvsCameraWrapper::SaveImage(MV_SAVE_IMAGE_PARAM_EX* pstParam)
-{
-  ensure(MV_CC_SaveImageEx2(_handle, pstParam));
-}
-
-void
-MvsCameraWrapper::SaveImageToFile(MV_SAVE_IMG_TO_FILE_PARAM* pstSaveFileParam)
-{
-  ensure(MV_CC_SaveImageToFile(_handle, pstSaveFileParam));
-}
-
 // bool
 // MvsCameraWrapper::is_grabbing() noexcept(false)
 //{

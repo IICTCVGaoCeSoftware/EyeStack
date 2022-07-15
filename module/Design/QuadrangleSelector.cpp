@@ -21,7 +21,7 @@ QuadrangleSelector::QuadrangleSelector(bool scattered, QWidget* parent)
   , _scattered(scattered)
 {
   _borderItem.setPen(QPen(Qt::cyan));
-  _outBorderItem.setPen(QPen(Qt::darkCyan));
+  _outBorderItem.setPen(QPen(Qt::yellow));
 }
 
 void
