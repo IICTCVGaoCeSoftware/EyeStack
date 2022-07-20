@@ -240,9 +240,6 @@ MvsCameraWrapper::start_grabbing(unsigned int nodeNum) noexcept(false)
     throw MvsError(MV_E_HANDLE);
   QMutexLocker locker(&_mutex);
 
-  // 设置触发模式为off
-  //  ensure(MV_CC_SetEnumValue(_handle, "TriggerMode", 0));
-
   ensure(MV_CC_SetImageNodeNum(_handle, nodeNum));
   ensure(MV_CC_StartGrabbing(_handle));
 
@@ -306,6 +303,12 @@ void
 MvsCameraWrapper::SetFloatValue(const char* strKey, float fValue)
 {
   ensure(MV_CC_SetFloatValue(_handle, strKey, fValue));
+}
+
+void
+MvsCameraWrapper::SetBoolValue(const char* strKey, bool bValue)
+{
+  ensure(MV_CC_SetBoolValue(_handle, strKey, bValue));
 }
 
 void

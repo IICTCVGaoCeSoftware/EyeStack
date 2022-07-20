@@ -40,9 +40,6 @@ function(install_eyestack_runtime _target)
   # 部署 OpenCV
   install(IMPORTED_RUNTIME_ARTIFACTS opencv_world)
 
-  # 部署 PCL
-  install(IMPORTED_RUNTIME_ARTIFACTS ${VTK_LIBRARIES})
-
   # 部署 Eyestack 框架
   install(IMPORTED_RUNTIME_ARTIFACTS
     Eyestack::Base Eyestack::Asset Eyestack::Design Eyestack::Framework

@@ -97,10 +97,10 @@
       <widget class="Design::Monitor" name="configMonitor" native="true">
        <property name="geometry">
         <rect>
-         <x>9</x>
-         <y>133</y>
-         <width>574</width>
-         <height>422</height>
+         <x>10</x>
+         <y>240</y>
+         <width>571</width>
+         <height>301</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -116,216 +116,307 @@
         </size>
        </property>
       </widget>
-      <widget class="QWidget" name="layoutWidget">
+      <widget class="QToolBox" name="toolBox">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>591</width>
-         <height>26</height>
+         <x>11</x>
+         <y>11</y>
+         <width>511</width>
+         <height>218</height>
         </rect>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPushButton" name="impropButton">
-          <property name="text">
-           <string>导入属性树...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="expropButton">
-          <property name="text">
-           <string>导出属性树...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="ContinueButton">
-          <property name="text">
-           <string>连续模式</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="TriggerButton">
-          <property name="text">
-           <string>触发模式</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="SoftTrigger">
-          <property name="text">
-           <string>软触发</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="SoftTriggerOnce">
-          <property name="text">
-           <string>软触发一次</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="layoutWidget">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>30</y>
-         <width>591</width>
-         <height>26</height>
-        </rect>
+       <property name="currentIndex">
+        <number>1</number>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QPushButton" name="SavePNGButton">
-          <property name="text">
-           <string>保存PNG</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="SaveBMPButton">
-          <property name="text">
-           <string>保存BMP</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>曝光时间：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="ExposureTime">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>60</width>
-            <height>16777215</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="GetExposureTime">
-          <property name="text">
-           <string>参数获取</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="SetExposureTime">
-          <property name="text">
-           <string>参数设置</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="layoutWidget">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>60</y>
-         <width>311</width>
-         <height>60</height>
-        </rect>
+       <property name="tabSpacing">
+        <number>6</number>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>线路选择</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="m_ctrlLineSelectCombo"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="m_ctrlGetLineselButton">
-            <property name="text">
-             <string>获取</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="m_ctrlSetLinesetButton">
-            <property name="text">
-             <string>设置</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
+       <widget class="QWidget" name="page">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>511</width>
+          <height>68</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>数字IO设置</string>
+        </attribute>
+        <widget class="QSplitter" name="splitter">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>280</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="opaqueResize">
+          <bool>true</bool>
+         </property>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>线路模式</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="m_ctrlLinemodeCombo"/>
+         <widget class="QPushButton" name="m_ctrlGetLinemodeButton">
+          <property name="text">
+           <string>获取</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="m_ctrlSetLinemodeButton">
+          <property name="text">
+           <string>设置</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QSplitter" name="splitter_2">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>40</y>
+           <width>280</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>线路选择</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="m_ctrlLineSelectCombo"/>
+         <widget class="QPushButton" name="m_ctrlGetLineselButton">
+          <property name="text">
+           <string>获取</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="m_ctrlSetLinesetButton">
+          <property name="text">
+           <string>设置</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="page_2">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>511</width>
+          <height>68</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>触发设置</string>
+        </attribute>
+        <widget class="QWidget" name="">
+         <property name="geometry">
+          <rect>
+           <x>41</x>
+           <y>1</y>
+           <width>154</width>
+           <height>24</height>
+          </rect>
+         </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QLabel" name="label_4">
+           <widget class="QRadioButton" name="ContinueButton">
             <property name="text">
-             <string>线路模式</string>
+             <string>连续模式</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="m_ctrlLinemodeCombo"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="m_ctrlGetLinemodeButton">
+           <widget class="QRadioButton" name="TriggerButton">
             <property name="text">
-             <string>获取</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="m_ctrlSetLinemodeButton">
-            <property name="text">
-             <string>设置</string>
+             <string>触发模式</string>
             </property>
            </widget>
           </item>
          </layout>
-        </item>
-       </layout>
+        </widget>
+        <widget class="QWidget" name="">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>30</y>
+           <width>228</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="TriggerEnable">
+            <property name="text">
+             <string>触发使能</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="SoftTrigger">
+            <property name="text">
+             <string>软触发</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="SoftTriggerOnce">
+            <property name="text">
+             <string>软触发一次</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="page_3">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>511</width>
+          <height>68</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>保存图片</string>
+        </attribute>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>10</y>
+           <width>168</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="SavePNGButton">
+            <property name="text">
+             <string>保存PNG</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="SaveBMPButton">
+            <property name="text">
+             <string>保存BMP</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="page_4">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>511</width>
+          <height>68</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>曝光时间</string>
+        </attribute>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>0</y>
+           <width>300</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>曝光时间：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="ExposureTime">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="GetExposureTime">
+            <property name="text">
+             <string>参数获取</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="SetExposureTime">
+            <property name="text">
+             <string>参数设置</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="page_5">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>511</width>
+          <height>68</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>属性导入导出</string>
+        </attribute>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>-10</y>
+           <width>168</width>
+           <height>26</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QPushButton" name="impropButton">
+            <property name="text">
+             <string>导入属性树...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="expropButton">
+            <property name="text">
+             <string>导出属性树...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
       </widget>
      </widget>
      <widget class="QWidget" name="runningTab">

@@ -17,11 +17,12 @@ add_library(Com_DLP SHARED
 
   ${_inc}/cypress_i2c.hpp cypress_i2c.cpp
 
-  ${_inc}/dlpc347x_samples.hpp dlpc347x_samples.cpp
-
   ${_inc}/DLP.hpp DLP.cpp
 
-  ${_inc}/dlpconfigui.h dlpconfigui.cpp dlpconfigui.ui
+  ${_inc}/DlpcConfigui.h DlpcConfigui.cpp dlpconfigui.ui
+
+  ${_inc}/DlpcWrapper.hpp DlpcWrapper.cpp
+
 )
 
 target_include_directories(Com_DLP

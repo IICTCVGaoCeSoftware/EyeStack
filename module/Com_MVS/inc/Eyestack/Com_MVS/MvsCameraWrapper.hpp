@@ -89,13 +89,26 @@ public:
    */
   bool is_connected() noexcept(false);
 
-  // ch:获取和设置Enum型参数
+  /**
+   * @brief 获取和设置Enum（具体参考MVS示例）
+   */
   void GetEnumValue(const char* strKey, MVCC_ENUMVALUE* pEnumValue);
   void SetEnumValue(const char* strKey, unsigned int nValue);
-  // ch:获取和设置Float型参数
+
+  /**
+   * @brief 获取和设置浮点值（具体参考MVS示例）
+   */
   void GetFloatValue(const char* strKey, MVCC_FLOATVALUE* pFloatValue);
   void SetFloatValue(const char* strKey, float fValue);
-  // ch:执行一次Command型命令
+
+  /**
+   * @brief 设置布尔变量（用于解决触发使能功能）
+   */
+  void SetBoolValue(const char* strKey, bool bValue);
+
+  /**
+   * @brief 执行一次Command命令
+   */
   void CommandExecute(const char* strKey);
 
   //  /**

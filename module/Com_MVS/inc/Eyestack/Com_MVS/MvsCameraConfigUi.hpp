@@ -135,10 +135,10 @@ private:
   QModelIndex _selected;
   QTimer _timer;
 
-  BOOL m_bOpenDevice;    // ch:是否打开设备 | en:Whether to open device
-  BOOL m_bStartGrabbing; // ch:是否开始抓图 | en:Whether to start grabbing
-  int m_nTriggerMode;    // ch:触发模式 | en:Trigger Mode
-  int m_nTriggerSource;  // ch:触发源 | en:Trigger Source
+  BOOL m_bOpenDevice;    // 是否打开设备
+  BOOL m_bStartGrabbing; // 是否开始抓图
+  int m_nTriggerMode;    // 触发模式
+  int m_nTriggerSource;  // 触发源
   int m_nLineSelectorCombo;
   int m_nLinemodeCombo;
   MV_FRAME_OUT_INFO_EX m_stImageInfo;
@@ -163,6 +163,9 @@ private:
   // 获取和设置触发源
   void GetTriggerSource();
   void SetTriggerSource();
+
+  // 设置触发使能
+  void SetTriggerEnable();
 
   // 自定义格式不支持显示
   bool RemoveCustomPixelFormats(enum MvGvspPixelType enPixelFormat);
@@ -205,13 +208,32 @@ private slots:
 
   // 保存图片按钮
   void on_SaveBMPButton_clicked();
+
+  // 设置曝光时间
   void on_SetExposureTime_clicked();
+
+  // 获取曝光时间
   void on_GetExposureTime_clicked();
+
+  // 保存PNG图像
   void on_SavePNGButton_clicked();
+
+  // 线路选择设置按钮
   void on_m_ctrlGetLineselButton_clicked();
+
+  // 线路选择获取按钮
   void on_m_ctrlSetLinesetButton_clicked();
+
+  // 线路模式获取按钮
   void on_m_ctrlGetLinemodeButton_clicked();
+
+  // 线路模式设置按钮
   void on_m_ctrlSetLinemodeButton_clicked();
+
+  // 软触发按钮
   void on_SoftTrigger_stateChanged(int arg1);
+
+  // 触发使能按钮
+  void on_TriggerEnable_stateChanged(int arg1);
 };
 }

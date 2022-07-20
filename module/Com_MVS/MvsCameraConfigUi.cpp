@@ -210,6 +210,12 @@ MvsCameraConfigUi::SetTriggerSource()
 }
 
 void
+MvsCameraConfigUi::SetTriggerEnable()
+{
+  _chosen->SetBoolValue("TriggerEnable", true);
+}
+
+void
 MvsCameraConfigUi::on_refreshButton_clicked()
 {
   auto camlist = MvsCameraWrapper::list_all();
@@ -704,4 +710,11 @@ MvsCameraConfigUi::on_SoftTrigger_stateChanged(int arg1)
   }
 }
 
+void
+MvsCameraConfigUi::on_TriggerEnable_stateChanged(int arg1)
+{
+  if (arg1 == Qt::Checked) {
+    SetTriggerEnable();
+  }
+}
 }

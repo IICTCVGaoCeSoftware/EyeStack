@@ -2,7 +2,6 @@
 
 // 加上才能识别Eyestack Namespace
 #include "Eyestack/Framework.hpp"
-#include "dlpc347x_samples.hpp"
 #include "ginit.hpp"
 
 namespace Eyestack::Com_DLP {
@@ -58,17 +57,12 @@ private slots:
 
   void on_ChessShow_clicked();
 
-  void handleRadioGroup(int id);
 
 private:
   Ui::DLPConfigUi* _ui;
   QStringList _list;
   QStringListModel* _listmodel;
   QComboBox* _pComboBox;
-  QVector<QStringList> file{ 4 };
-  uint16_t PatternIdx = 0;
-  uint8_t PatternEntryIdx = 0;
   QButtonGroup *_fore, *_back;
-  DLPC347X_Color_e fore, back;
 };
 }

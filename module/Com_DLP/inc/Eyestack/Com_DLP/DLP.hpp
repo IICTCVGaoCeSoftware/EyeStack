@@ -1,7 +1,8 @@
 #pragma once
 
+#include "DlpcConfigui.h"
+#include "Eyestack/Com_DLP/DlpcWrapper.hpp"
 #include "Eyestack/Framework/Workctrl.hpp"
-#include "dlpconfigui.h"
 #include "ginit.hpp"
 
 namespace Eyestack::Com_DLP {
@@ -42,6 +43,9 @@ public:
     Q_ASSERT(worker);
     return *worker;
   }
+
+private:
+  DlpcWrapper::Shared _dlp;
 };
 
 // ==========================================================================
